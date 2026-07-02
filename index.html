@@ -91,7 +91,7 @@
     </div>
 
     <audio id="musik" loop preload="auto">
-        <source src="lagufotoblur.mp3" type="audio/mpeg">
+        <source src="lagu-blur.mp3" type="audio/mpeg">
     </audio>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -108,7 +108,7 @@
         let countdownTimer;
 
         async function mulaiAplikasi() {
-            // Trik Unlock Audio: Paksa play lalu pause seketika
+            // Trik Unlock Audio: Paksa play lalu pause seketika agar diizinkan browser
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
@@ -118,13 +118,15 @@
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                // Hapus batasan rasio agar tidak nge-zoom
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                // Resolusi diturunkan agar super enteng dan tidak ngelag di HP
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 360, height: 480, facingMode: "user" } });
                 videoElement.srcObject = stream;
             } catch (err) { alert("Izinkan kamera ya!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            
+            // AI diringankan ke level 0 agar FPS ngebut, sensitivitas diturunkan agar tangan sepotong terbaca
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4 });
             hands.onResults(onResults);
 
             async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
@@ -137,13 +139,20 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
-                    // Logika Dipermudah: Hanya cek Telunjuk (8) dan Tengah (12) di atas pangkalnya (5 & 9)
-                    // Lebih sensitif meskipun tangan ada di pinggir layar atau terlalu dekat
-                    const isTelunjukNaik = landmarks[8].y < landmarks[5].y;
-                    const isTengahNaik = landmarks[12].y < landmarks[9].y;
-                    const isManisTurun = landmarks[16].y > landmarks[13].y;
+                    // Logika Dipermudah untuk tangan yang di ujung/bawah layar
+                    const ujungTelunjuk = landmarks[8].y;
+                    const ruasTelunjuk = landmarks[6].y;
+                    const ujungTengah = landmarks[12].y;
+                    const ruasTengah = landmarks[10].y;
+                    const ujungManis = landmarks[16].y;
                     
-                    // Cukup 3 kondisi ini agar deteksi lebih luwes
+                    // Cek apakah telunjuk dan tengah naik melewati ruasnya sendiri
+                    const isTelunjukNaik = ujungTelunjuk < ruasTelunjuk;
+                    const isTengahNaik = ujungTengah < ruasTengah;
+                    
+                    // Cek apakah jari manis ada di bawah (ditekuk)
+                    const isManisTurun = ujungManis > ujungTengah;
+                    
                     if (isTelunjukNaik && isTengahNaik && isManisTurun) {
                         gayaDuaJari = true; break;
                     }
