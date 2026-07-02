@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foto Kita Blur BY Rezyyxy</title>
+    <title>Foto Kita Blur</title>
     <style>
         :root {
             --bg-pink: #ff529a;
@@ -59,16 +59,16 @@
 <body>
 
     <div id="landing-page" class="container">
-        <div class="top-badge">TREND TIKTOK 2026</div>
+        <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
             <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita Blur</h1></div>
-            <p>Gestur Telunjuk + Tengah (bisa tangan kiri/kanan, menyamping, atau agak belakang).</p>
+            <p>Hanya <strong>Telunjuk + Tengah</strong> yang aktifkan blur.<br>Fleksibel sedikit tapi ketat.</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN • FLEKSIBEL</div></div>
+            <div class="info-text"><div>🔒 PRIVASI AMAN</div></div>
         </div>
-        <div class="footer">MADE WITH ❤️ BY Rezyyxy</div>
+        <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
     <div id="camera-page" class="container hidden">
@@ -82,11 +82,11 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: red;">ANGKAT TELUNJUK + TENGAH</span></div>
-                <div>🎵 FOTO KITA BLUR</div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: red;">TELUNJUK + TENGAH SAJA</span></div>
+                <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
             </div>
         </div>
-        <div class="footer">MADE WITH ❤️ BY Rezyyxy</div>
+        <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
     <audio id="musik" preload="auto">
@@ -131,12 +131,7 @@
             } catch (err) { alert("Izinkan kamera!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ 
-                maxNumHands: 4, 
-                modelComplexity: 0, 
-                minDetectionConfidence: 0.5, 
-                minTrackingConfidence: 0.5 
-            });
+            hands.setOptions({ maxNumHands: 4, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
@@ -151,6 +146,8 @@
             }
             videoElement.addEventListener('loadeddata', prosesFrame);
         }
+
+        const getJarak = (p1, p2) => (p1.x - p2.x)**2 + (p1.y - p2.y)**2;
 
         function onResults(results) {
             canvasCtx.save();
@@ -174,23 +171,26 @@
                     }
                     canvasCtx.stroke();
 
-                    // Deteksi fleksibel (tangan kiri/kanan, menyamping, agak belakang)
-                    const t8 = landmarks[8];  // telunjuk tip
-                    const t6 = landmarks[6];  // telunjuk pip
+                    // DETEKSI KETAT TAPI MASIH MENDUKUNG SEDIKIT ROTASI
+                    const t8 = landmarks[8];   // telunjuk tip
+                    const t6 = landmarks[6];   // telunjuk pip
                     const t12 = landmarks[12]; // tengah tip
                     const t10 = landmarks[10]; // tengah pip
 
-                    const t16 = landmarks[16]; // manis
-                    const t20 = landmarks[20]; // kelingking
+                    const t16 = landmarks[16]; // manis tip
+                    const t20 = landmarks[20]; // kelingking tip
+                    const t4 = landmarks[4];   // jempol tip
 
-                    // Cek apakah telunjuk dan tengah lebih panjang / extended
-                    const telunjukExtended = (t8.y < t6.y - 0.07) || (Math.abs(t8.x - t6.x) > 0.08);
-                    const tengahExtended = (t12.y < t10.y - 0.07) || (Math.abs(t12.x - t10.x) > 0.08);
+                    // Telunjuk dan Tengah harus jelas naik
+                    const telunjukNaik = (t8.y < t6.y - 0.09) || (Math.hypot(t8.x - t6.x, t8.y - t6.y) > 0.12);
+                    const tengahNaik   = (t12.y < t10.y - 0.09) || (Math.hypot(t12.x - t10.x, t12.y - t10.y) > 0.12);
 
-                    // Jari lain tidak terlalu extended
-                    const otherFingersDown = t16.y > t10.y - 0.05 && t20.y > t10.y - 0.05;
+                    // Jari lain harus jelas turun
+                    const manisTurun = t16.y > t10.y - 0.08;
+                    const kelingkingTurun = t20.y > t10.y - 0.08;
+                    const jempolTurun = t4.y > t6.y - 0.1 || getJarak(t4, landmarks[0]) < 0.15;
 
-                    if (telunjukExtended && tengahExtended && otherFingersDown) {
+                    if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
                         gayaDuaJari = true;
                         break;
                     }
@@ -219,7 +219,7 @@
 
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "✅ BLUR NYALA" : 
+                    "✅ BLUR NYALA (Telunjuk + Tengah)" : 
                     "⭕ BLUR MATI";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
@@ -230,14 +230,14 @@
             let waktu = 3;
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
-            statusText.innerText = "TAHAN... " + waktu;
+            statusText.innerText = "TAHAN GESTUR... " + waktu;
             statusText.style.color = "#ffca3a";
 
             countdownTimer = setInterval(() => {
                 waktu--;
                 if (waktu > 0) {
                     angkaCountdown.innerText = waktu;
-                    statusText.innerText = "TAHAN... " + waktu;
+                    statusText.innerText = "TAHAN GESTUR... " + waktu;
                 } else {
                     clearInterval(countdownTimer);
                     angkaCountdown.classList.add('hidden');
@@ -254,7 +254,7 @@
             clearInterval(countdownTimer);
             isCounting = false;
             angkaCountdown.classList.add('hidden');
-            statusText.innerText = "ANGKAT TELUNJUK + TENGAH";
+            statusText.innerText = "TELUNJUK + TENGAH SAJA";
             statusText.style.color = "red";
         }
     </script>
