@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foto Kita Blur - Rame Mode</title>
+    <title>Foto Kita Blur</title>
     <style>
         :root {
             --bg-pink: #ff529a;
@@ -62,11 +62,11 @@
         <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
             <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita Blur</h1></div>
-            <p>Gestur 2 jari = Blur Nyala<br>Tangan turun / kepal = Blur Mati (lagu tetap jalan)</p>
+            <p>Hanya gestur <strong>Telunjuk + Tengah</strong> yang aktifkan blur.<br>Jari lain tidak akan mempengaruhi.</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN</div><div>📱 BISA RAME-RAMEAN</div></div>
+            <div class="info-text"><div>🔒 PRIVASI AMAN</div><div>📱 BISA RAME-RAME</div></div>
         </div>
         <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
@@ -82,7 +82,7 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: red;">SIAPKAN 2 JARI...</span></div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: red;">TUNJUKKAN TELUNJUK + TENGAH...</span></div>
                 <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
             </div>
         </div>
@@ -157,7 +157,7 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Draw overlay
+                    // Gambar overlay
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
@@ -171,14 +171,17 @@
                     }
                     canvasCtx.stroke();
 
-                    // Deteksi gestur (diperbaiki agar lebih cepat mati)
+                    // === DETEKSI KETAT HANYA TELUNJUK + TENGAH ===
                     const wrist = landmarks[0];
-                    const indexUp = getJarak(landmarks[8], wrist) > getJarak(landmarks[6], wrist) * 1.25;
-                    const middleUp = getJarak(landmarks[12], wrist) > getJarak(landmarks[10], wrist) * 1.25;
-                    const ringDown = getJarak(landmarks[16], wrist) < getJarak(landmarks[14], wrist) * 0.85;
-                    const pinkyDown = getJarak(landmarks[20], wrist) < getJarak(landmarks[18], wrist) * 0.85;
+                    
+                    const telunjukNaik = getJarak(landmarks[8], wrist) > getJarak(landmarks[6], wrist) * 1.3;
+                    const tengahNaik   = getJarak(landmarks[12], wrist) > getJarak(landmarks[10], wrist) * 1.3;
+                    
+                    const jempolTurun  = getJarak(landmarks[4], wrist) < getJarak(landmarks[3], wrist) * 1.2;
+                    const manisTurun   = getJarak(landmarks[16], wrist) < getJarak(landmarks[14], wrist) * 0.9;
+                    const kelingkingTurun = getJarak(landmarks[20], wrist) < getJarak(landmarks[18], wrist) * 0.9;
 
-                    if (indexUp && middleUp && ringDown && pinkyDown) {
+                    if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
                         gayaDuaJari = true;
                         break;
                     }
@@ -187,7 +190,7 @@
 
             canvasCtx.restore();
 
-            // Logika utama
+            // Logika Blur
             if (butuhResetTangan) {
                 if (!gayaDuaJari) butuhResetTangan = false;
                 return;
@@ -199,18 +202,16 @@
                 batalkanHitungMundur();
             }
 
-            // Blur Logic (persis seperti video)
             if (isCounting || (isUnlocked && gayaDuaJari)) {
                 videoElement.classList.add('blur-aktif');
             } else {
                 videoElement.classList.remove('blur-aktif');
             }
 
-            // Status
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "BLUR NYALA - Tahan 2 jari" : 
-                    "BLUR MATI - Tangan turun / kepal OK";
+                    "BLUR NYALA ✅ (Telunjuk + Tengah)" : 
+                    "BLUR MATI - Turunkan / Kepal tangan";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
@@ -220,14 +221,14 @@
             let waktu = 3;
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
-            statusText.innerText = "MENAHAN... " + waktu;
+            statusText.innerText = "TAHAN GESTUR... " + waktu;
             statusText.style.color = "#ffca3a";
 
             countdownTimer = setInterval(() => {
                 waktu--;
                 if (waktu > 0) {
                     angkaCountdown.innerText = waktu;
-                    statusText.innerText = "MENAHAN... " + waktu;
+                    statusText.innerText = "TAHAN GESTUR... " + waktu;
                 } else {
                     clearInterval(countdownTimer);
                     angkaCountdown.classList.add('hidden');
@@ -244,7 +245,7 @@
             clearInterval(countdownTimer);
             isCounting = false;
             angkaCountdown.classList.add('hidden');
-            statusText.innerText = "SIAPKAN 2 JARI...";
+            statusText.innerText = "TUNJUKKAN TELUNJUK + TENGAH...";
             statusText.style.color = "red";
         }
     </script>
