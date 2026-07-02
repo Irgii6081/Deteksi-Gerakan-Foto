@@ -137,15 +137,9 @@
             box-sizing: border-box; 
         }
 
-        .hidden { 
-            display: none !important; 
-        }
+        .hidden { display: none !important; }
 
-        .camera-card { 
-            padding: 0; 
-            overflow: hidden; 
-        }
-        
+        .camera-card { padding: 0; overflow: hidden; }
         .camera-topbar { 
             background: black; 
             color: white; 
@@ -154,7 +148,6 @@
             justify-content: space-between; 
             font-size: 12px; 
         }
-        
         .badge-scan { 
             background: yellow; 
             color: black; 
@@ -180,20 +173,14 @@
             width: 100%; 
             height: auto; 
             transform: scaleX(-1); 
-            transition: filter 0.2s ease; 
-            will-change: filter; 
+            transition: filter 0.3s ease; 
         }
-        
-        .blur-aktif { 
-            filter: blur(20px); 
-        }
+        .blur-aktif { filter: blur(20px); }
 
         #output_canvas { 
             position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
             transform: scaleX(-1); 
             z-index: 5; 
             pointer-events: none; 
@@ -213,7 +200,6 @@
             font-family: monospace; 
             font-size: 12px; 
         }
-        
         .status-box { 
             border: 1px dashed black; 
             padding: 10px; 
@@ -289,7 +275,6 @@
             isUnlocked = false;
             isCounting = false;
             butuhResetTangan = true; 
-            
             videoElement.classList.remove('blur-aktif');
             statusText.innerText = "LAGU HABIS. TURUNKAN TANGAN DULU...";
             statusText.style.color = "red";
@@ -297,18 +282,13 @@
         });
 
         async function mulaiAplikasi() {
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(() => {});
+            audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
 
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoElement.srcObject = stream;
             } catch (err) { 
                 alert("Izinkan akses kamera ya!"); 
@@ -316,17 +296,12 @@
             }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ 
-                maxNumHands: 2, 
-                modelComplexity: 0, 
-                minDetectionConfidence: 0.5, 
-                minTrackingConfidence: 0.5 
-            });
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
-                if (videoElement.videoWidth > 0) {
-                    if (canvasElement.width !== videoElement.videoWidth) {
+                if(videoElement.videoWidth > 0) {
+                    if(canvasElement.width !== videoElement.videoWidth) {
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
                     }
@@ -351,7 +326,7 @@
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
-                    const tulang = [[0,1,2,3,4], [0,5,6,7,8], [0,9,10,11,12], [0,13,14,15,16], [0,17,18,19,20], [5,9,13,17]];
+                    const tulang = [[0,1,2,3,4],[0,5,6,7,8],[0,9,10,11,12],[0,13,14,15,16],[0,17,18,19,20],[5,9,13,17]];
                     for (let j = 0; j < tulang.length; j++) {
                         let ruas = tulang[j];
                         for (let k = 0; k < ruas.length - 1; k++) {
@@ -370,12 +345,12 @@
                         canvasCtx.fill();
                     }
 
-                    // Deteksi Gestur 2 Jari
+                    // Deteksi Gestur 2 Jari (diperketat)
                     const pergelangan = landmarks[0];
-                    const telunjukNaik = getJarak(landmarks[8], pergelangan) > getJarak(landmarks[6], pergelangan) * 1.1;
-                    const tengahNaik   = getJarak(landmarks[12], pergelangan) > getJarak(landmarks[10], pergelangan) * 1.1;
-                    const manisTurun   = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan) * 0.9;
-                    const kelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan) * 0.9;
+                    const telunjukNaik = getJarak(landmarks[8], pergelangan) > getJarak(landmarks[6], pergelangan) * 1.2;
+                    const tengahNaik   = getJarak(landmarks[12], pergelangan) > getJarak(landmarks[10], pergelangan) * 1.2;
+                    const manisTurun   = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan) * 0.85;
+                    const kelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan) * 0.85;
 
                     if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun) {
                         gayaDuaJari = true;
@@ -386,13 +361,9 @@
 
             canvasCtx.restore();
 
-            // Logika Utama
+            // LOGIKA BARU - Blur lebih responsif
             if (butuhResetTangan) {
-                if (!gayaDuaJari) {
-                    butuhResetTangan = false;
-                    statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
-                    statusText.style.color = "red";
-                }
+                if (!gayaDuaJari) butuhResetTangan = false;
                 return;
             }
 
@@ -402,18 +373,18 @@
                 batalkanHitungMundur();
             }
 
-            // Blur Logic (sudah diperbaiki)
+            // Blur hanya nyala kalau sedang countdown ATAU (lagu play DAN gestur 2 jari jelas terdeteksi)
             if (isCounting || (isUnlocked && gayaDuaJari)) {
                 videoElement.classList.add('blur-aktif');
             } else {
                 videoElement.classList.remove('blur-aktif');
             }
 
-            // Status Text
+            // Update status
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "🎵 SEDANG PLAY - TAHAN 2 JARI" : 
-                    "🎵 PLAY - KE PAL / TURUNKAN TANGAN UNTUK MATIKAN BLUR";
+                    "🎵 PLAY - TAHAN 2 JARI" : 
+                    "🎵 PLAY - Kepal / Turunkan tangan untuk matikan blur";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
@@ -421,7 +392,6 @@
         function mulaiHitungMundur() {
             isCounting = true;
             let waktu = 3;
-            
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
             statusText.innerText = "MENAHAN GESTUR... " + waktu;
@@ -437,10 +407,8 @@
                     angkaCountdown.classList.add('hidden');
                     isUnlocked = true;
                     isCounting = false;
-                    
                     audio.play(); 
-                    
-                    statusText.innerText = "AUDIO UNLOCKED! TAHAN 2 JARI UNTUK BLUR";
+                    statusText.innerText = "AUDIO UNLOCKED!";
                     statusText.style.color = "#4ade80"; 
                 }
             }, 1000);
