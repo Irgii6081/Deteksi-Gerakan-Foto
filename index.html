@@ -49,7 +49,6 @@
         #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.2s ease; will-change: filter; }
         .blur-aktif { filter: blur(20px); }
 
-        /* CANVAS GARIS HIJAU (Tidak ikut terblur saat video blur) */
         #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
         
         #angka-countdown { position: absolute; font-size: 100px; color: white; font-weight: bold; text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10; }
@@ -140,9 +139,7 @@
             hands.onResults(onResults);
 
             async function prosesFrame() { 
-                // Pastikan video sudah memiliki ukuran sebelum diproses AI (mencegah crash)
                 if(videoElement.videoWidth > 0) {
-                    // Update ukuran canvas agar pas persis dengan ukuran kamera HP
                     if(canvasElement.width !== videoElement.videoWidth) {
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
@@ -157,27 +154,21 @@
         const getJarak = (p1, p2) => (p1.x - p2.x)**2 + (p1.y - p2.y)**2;
 
         function onResults(results) {
-            // BERSIHKAN CANVAS LALU GAMBAR ULANG SETIAP KALI TANGAN BERGERAK
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-            let gayaDuaJari = false;
+            // Default: tidak ada gestur 2 jari
+            let gayaDuaJari = false; 
 
+            // Jika tangan terdeteksi, evaluasi posisinya
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
-                    // ==============================================
-                    // MENGGAMBAR GARIS HIJAU (DEBUG MODE MANUAL)
-                    // ==============================================
-                    canvasCtx.strokeStyle = '#00FF00'; // Warna Hijau Neon
+                    // GAMBAR GARIS HIJAU MANUAL
+                    canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
-                    
-                    // Hubungan tulang jari
-                    const tulang = [
-                        [0,1,2,3,4], [0,5,6,7,8], [0,9,10,11,12], [0,13,14,15,16], [0,17,18,19,20], [5,9,13,17]
-                    ];
-                    
+                    const tulang = [[0,1,2,3,4], [0,5,6,7,8], [0,9,10,11,12], [0,13,14,15,16], [0,17,18,19,20], [5,9,13,17]];
                     for (let j = 0; j < tulang.length; j++) {
                         let ruas = tulang[j];
                         for (let k = 0; k < ruas.length - 1; k++) {
@@ -187,7 +178,7 @@
                     }
                     canvasCtx.stroke();
 
-                    // Menggambar Titik Sendi Merah
+                    // GAMBAR TITIK MERAH
                     canvasCtx.fillStyle = '#FF0000';
                     for (let i = 0; i < landmarks.length; i++) {
                         const x = landmarks[i].x * canvasElement.width;
@@ -196,16 +187,13 @@
                         canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
                         canvasCtx.fill();
                     }
-                    // ==============================================
 
+                    // LOGIKA DETEKSI 2 JARI
                     const pergelangan = landmarks[0];
-
                     const isTelunjukNaik = getJarak(landmarks[8], pergelangan) > getJarak(landmarks[6], pergelangan);
                     const isTengahNaik = getJarak(landmarks[12], pergelangan) > getJarak(landmarks[10], pergelangan);
                     const isManisTurun = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan);
                     const isKelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan);
-
-                    // Jempol ditekuk ke dalam 
                     const isJempolTurun = getJarak(landmarks[4], landmarks[17]) < getJarak(landmarks[4], landmarks[5]);
                     
                     if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun && isJempolTurun) {
@@ -216,23 +204,30 @@
             }
             canvasCtx.restore();
 
-            // LOGIKA EFEK & COUNTDOWN
+            // ==========================================
+            // PERBAIKAN LOGIKA BLUR DI SINI
+            // ==========================================
             if (butuhResetTangan) {
                 if (!gayaDuaJari) {
                     butuhResetTangan = false; 
                     statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
                 }
             } else {
+                // Logika Hitung Mundur
                 if (gayaDuaJari && !isUnlocked && !isCounting) {
                     mulaiHitungMundur();
                 } else if (!gayaDuaJari && isCounting) {
                     batalkanHitungMundur();
                 }
 
-                // Blur hanya akan aktif saat sedang menghitung atau saat musik sedang jalan
-                if (isUnlocked || isCounting) {
+                // LOGIKA EFEK BLUR:
+                // Blur HANYA NYALA JIKA:
+                // 1. Sedang hitung mundur (isCounting == true) ATAU
+                // 2. Musik sudah jalan (isUnlocked == true) DAN kamu sedang berpose 2 jari (gayaDuaJari == true)
+                if (isCounting || (isUnlocked && gayaDuaJari)) {
                     videoElement.classList.add('blur-aktif');
                 } else {
+                    // Kalau lagu jalan tapi tangan dikepalkan/diturunkan, blur PASTI mati.
                     videoElement.classList.remove('blur-aktif');
                 }
             }
@@ -241,8 +236,6 @@
         function mulaiHitungMundur() {
             isCounting = true;
             let waktu = 3;
-            
-            videoElement.classList.add('blur-aktif'); 
             
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
@@ -271,8 +264,6 @@
         function batalkanHitungMundur() {
             clearInterval(countdownTimer);
             isCounting = false;
-            
-            videoElement.classList.remove('blur-aktif');
             
             angkaCountdown.classList.add('hidden');
             statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
