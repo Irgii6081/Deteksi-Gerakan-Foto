@@ -44,8 +44,9 @@
         .camera-topbar { background: black; color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; }
         .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
         
-        .video-wrapper { position: relative; width: 100%; height: 500px; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.3s ease; will-change: filter; }
+        /* PERBAIKAN KAMERA: Tinggi auto agar resolusi asli kamera tidak kepotong */
+        .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
+        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.3s ease; will-change: filter; }
         .blur-aktif { filter: blur(20px); }
 
         #angka-countdown {
@@ -83,10 +84,10 @@
 
             <div class="camera-status">
                 <div class="status-box">STATUS: <span id="status-text" style="color: red;">MENUNGGU GESTUR 2 JARI...</span></div>
-                <div>🎵 FOTO KITA BLUR</div>
+                <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
             </div>
         </div>
-        <div class="footer">MADE WITH ❤️ BY REXZY</div>
+        <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
     <audio id="musik" loop preload="auto">
@@ -116,14 +117,15 @@
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 360, height: 480, facingMode: "user" } });
+                // PERBAIKAN: Tidak memaksa resolusi tertentu, biarkan mengambil rasio asli dari HP/Laptop agar tidak ngezoom
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoElement.srcObject = stream;
             } catch (err) { alert("Izinkan kamera ya!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             
-            // Sensitivitas dinaikkan sedikit ke 0.5 agar tidak salah tangkap bayangan atau benda lain
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            // PERBAIKAN: Kembalikan modelComplexity ke 1 agar AI "pintar" membedakan jari
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
             hands.onResults(onResults);
 
             async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
@@ -136,18 +138,22 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
-                    // KUNCI LOGIKA SUPER KETAT:
-                    // 1. Telunjuk dan Tengah harus naik (lebih tinggi dari ruas sebelumnya)
-                    const isTelunjukNaik = landmarks[8].y < landmarks[6].y;
-                    const isTengahNaik = landmarks[12].y < landmarks[10].y;
+                    // KUNCI SUPER KETAT: Membedakan mana yang berdiri dan mana yang dilipat
                     
-                    // 2. Jari Manis dan Kelingking harus turun/ditekuk (lebih rendah dari ruas sebelumnya)
+                    // 1. Telunjuk (8) dan Tengah (12) WAJIB NAIK 
+                    // (Ujungnya harus lebih tinggi dari pangkal telapak tangan bawah/MCP)
+                    const isTelunjukNaik = landmarks[8].y < landmarks[5].y;
+                    const isTengahNaik = landmarks[12].y < landmarks[9].y;
+                    
+                    // 2. Jari Manis (16) dan Kelingking (20) WAJIB DITEKUK/TURUN
+                    // (Ujungnya harus lebih rendah dari persendian atasnya/PIP, bukti kalau dilipat ke telapak)
                     const isManisTurun = landmarks[16].y > landmarks[14].y;
                     const isKelingkingTurun = landmarks[20].y > landmarks[18].y;
                     
-                    // Semua syarat (4 jari ini) harus terpenuhi bersamaan
+                    // Jika semua jari dalam posisi yang tepat (Peace Sign murni)
                     if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun) {
-                        gayaDuaJari = true; break;
+                        gayaDuaJari = true; 
+                        break;
                     }
                 }
             }
