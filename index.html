@@ -105,21 +105,25 @@
         let isUnlocked = false;    
         let isCounting = false;    
         let countdownTimer;
+        let butuhResetTangan = false; 
 
-        // FUNGSI RESET: Ketika lagu habis, kembalikan semua seperti semula
         audio.addEventListener('ended', () => {
             isUnlocked = false;
             isCounting = false;
+            butuhResetTangan = true; 
+            
             videoElement.classList.remove('blur-aktif');
-            statusText.innerText = "LAGU HABIS. MENUNGGU GESTUR...";
+            statusText.innerText = "LAGU HABIS. TURUNKAN TANGAN DULU...";
             statusText.style.color = "red";
+            
+            audio.currentTime = 0; 
         });
 
         async function mulaiAplikasi() {
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
-            }).catch(e => console.log("Menunggu interaksi manual user untuk audio"));
+            }).catch(e => console.log("Audio standby."));
 
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
@@ -130,12 +134,16 @@
             } catch (err) { alert("Izinkan kamera ya!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
             hands.onResults(onResults);
 
             async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
             videoElement.addEventListener('loadeddata', prosesFrame);
+        }
+
+        // FUNGSI MATEMATIKA ANTI-MIRING: Menghitung jarak antara dua titik koordinat
+        function hitungJarak(titik1, titik2) {
+            return Math.sqrt(Math.pow(titik1.x - titik2.x, 2) + Math.pow(titik1.y - titik2.y, 2));
         }
 
         function onResults(results) {
@@ -144,20 +152,19 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
-                    // KUNCI 5 JARI (Posisi Tangan Harus Tegak Menghadap Kamera)
-                    
-                    // 1. Jempol harus turun/ditekuk (Posisi ujung jempol (4) harus di bawah pangkal telunjuk (5))
-                    const isJempolTurun = landmarks[4].y > landmarks[5].y;
+                    const pergelangan = landmarks[0];
+                    const pangkalKelingking = landmarks[17];
 
-                    // 2. Telunjuk (8) & Tengah (12) WAJIB NAIK (Ujungnya di atas persendian tengah & pangkal)
-                    const isTelunjukNaik = landmarks[8].y < landmarks[6].y && landmarks[8].y < landmarks[5].y;
-                    const isTengahNaik = landmarks[12].y < landmarks[10].y && landmarks[12].y < landmarks[9].y;
+                    // LOGIKA BARU: Cek jarak ke pergelangan tangan (0). Jika ditekuk, ujung jari pasti lebih dekat ke pergelangan dibanding ruasnya.
+                    const isTelunjukNaik = hitungJarak(landmarks[8], pergelangan) > hitungJarak(landmarks[6], pergelangan);
+                    const isTengahNaik = hitungJarak(landmarks[12], pergelangan) > hitungJarak(landmarks[10], pergelangan);
+                    const isManisTurun = hitungJarak(landmarks[16], pergelangan) < hitungJarak(landmarks[14], pergelangan);
+                    const isKelingkingTurun = hitungJarak(landmarks[20], pergelangan) < hitungJarak(landmarks[18], pergelangan);
+
+                    // LOGIKA JEMPOL: Jempol yang terbuka (seperti fotomu) jaraknya akan jauh dari pangkal kelingking (17).
+                    // Jika jempol ditutup/ditekuk, ujung jempol (4) akan mendekat ke telapak tangan.
+                    const isJempolTurun = hitungJarak(landmarks[4], pangkalKelingking) < hitungJarak(landmarks[3], pangkalKelingking);
                     
-                    // 3. Jari Manis (16) & Kelingking (20) WAJIB TURUN/DITEKUK (Ujungnya harus di bawah buku jari)
-                    const isManisTurun = landmarks[16].y > landmarks[13].y;
-                    const isKelingkingTurun = landmarks[20].y > landmarks[17].y;
-                    
-                    // Jika SEMUA jari posisinya benar, baru anggap sah!
                     if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun && isJempolTurun) {
                         gayaDuaJari = true; 
                         break;
@@ -165,14 +172,20 @@
                 }
             }
 
-            if (gayaDuaJari && !isUnlocked && !isCounting) {
-                mulaiHitungMundur();
-            } else if (!gayaDuaJari && isCounting) {
-                batalkanHitungMundur();
-            }
+            if (butuhResetTangan) {
+                if (!gayaDuaJari) {
+                    butuhResetTangan = false; 
+                    statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
+                }
+            } else {
+                if (gayaDuaJari && !isUnlocked && !isCounting) {
+                    mulaiHitungMundur();
+                } else if (!gayaDuaJari && isCounting) {
+                    batalkanHitungMundur();
+                }
 
-            if (isUnlocked) {
-                if (gayaDuaJari) {
+                // Efek blur langsung bereaksi walau lagu belum mulai!
+                if (isUnlocked || isCounting) {
                     videoElement.classList.add('blur-aktif');
                 } else {
                     videoElement.classList.remove('blur-aktif');
@@ -183,6 +196,10 @@
         function mulaiHitungMundur() {
             isCounting = true;
             let waktu = 3;
+            
+            // Blur langsung aktif di detik pertama hitung mundur
+            videoElement.classList.add('blur-aktif'); 
+            
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
             statusText.innerText = "MENAHAN GESTUR... " + waktu;
@@ -201,7 +218,6 @@
                     
                     audio.play(); 
                     
-                    videoElement.classList.add('blur-aktif');
                     statusText.innerText = "AUDIO UNLOCKED VIA GESTURE.";
                     statusText.style.color = "#4ade80"; 
                 }
@@ -211,6 +227,10 @@
         function batalkanHitungMundur() {
             clearInterval(countdownTimer);
             isCounting = false;
+            
+            // Hilangkan blur jika batal nahan jari
+            videoElement.classList.remove('blur-aktif');
+            
             angkaCountdown.classList.add('hidden');
             statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
             statusText.style.color = "red";
