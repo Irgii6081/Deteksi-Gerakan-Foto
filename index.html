@@ -3,77 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blur Effect App</title>
+    <title>Foto Kita Blur - Pro</title>
     <style>
-        :root {
-            --accent-color: #ffca3a; /* Warna kuning cerah */
-            --bg-color: #121212; /* Background gelap */
-        }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg-color);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: #1e1e1e;
-            padding: 2rem;
-            border-radius: 20px;
-            border: 2px solid var(--accent-color);
-            text-align: center;
-            width: 300px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        button {
-            background-color: var(--accent-color);
-            color: black;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .hidden { display: none; }
-        #webcam { width: 100%; border-radius: 15px; transform: scaleX(-1); }
-        .blur-active { filter: blur(15px); transition: 0.3s; }
+        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
+        
+        /* Konten utama yang akan diblur */
+        #konten { transition: filter 0.2s ease-out; will-change: filter; color: white; text-align: center; font-size: 2rem; z-index: 1; }
+        .blur-aktif { filter: blur(20px); }
+
+        /* Kamera */
+        #webcam { position: fixed; bottom: 10px; right: 10px; width: 120px; height: 160px; transform: scaleX(-1); border-radius: 10px; border: 2px solid #fff; object-fit: cover; }
+        
+        /* Tombol Start */
+        #btn-mulai { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #32ff7e; border: none; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="landing" class="card">
-        <h2>Foto Kita Blur</h2>
-        <p>Aplikasi deteksi gestur tangan.</p>
-        <button onclick="startApp()">AKTIFKAN KAMERA</button>
-    </div>
-
-    <div id="app" class="hidden">
-        <video id="webcam" autoplay playsinline></video>
-        <audio id="music" loop>
-            <source src="cobain web foto kita blur abidfaizsaladin.com_blur #fotokitablur #koding #programmer #ngoding #informatika.mp3" type="audio/mpeg">
-        </audio>
-    </div>
+    <button id="btn-mulai">MULAI KAMERA</button>
+    <div id="konten">Tunjukkan 2 Jari!</div>
+    <video id="webcam" autoplay playsinline class="hidden"></video>
+    <audio id="musik" loop><source src="lagu-anda.mp3" type="audio/mpeg"></audio>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
-    <script>
-        async function startApp() {
-            document.getElementById('landing').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            const video = document.getElementById('webcam');
-            const audio = document.getElementById('music');
-            
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+    <script type="module">
+        import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js";
+
+        const video = document.getElementById('webcam');
+        const konten = document.getElementById('konten');
+        const musik = document.getElementById('musik');
+        const btnMulai = document.getElementById('btn-mulai');
+        let handLandmarker;
+
+        async function init() {
+            // Setup Kamera dengan resolusi rendah agar enteng
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 320, height: 240 } 
+            });
             video.srcObject = stream;
-            
-            // Logika deteksi nanti akan dimasukkan di sini
-            // Saat 2 jari terdeteksi:
-            // video.classList.add('blur-active');
-            // audio.play();
+            video.classList.remove('hidden');
+            btnMulai.style.display = 'none';
+
+            // Setup AI
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
+            handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task` },
+                numHands: 2 // Bisa deteksi 2 tangan sekaligus (rame orang)
+            });
+            predict();
         }
+
+        function predict() {
+            const results = handLandmarker.detectForVideo(video, performance.now());
+            
+            let blurTrigger = false;
+            if (results.landmarks.length > 0) {
+                // Cek semua tangan yang terdeteksi
+                for (let landmarks of results.landmarks) {
+                    // Logika 2 jari: telunjuk(8) & tengah(12) tegak
+                    if (landmarks[8].y < landmarks[5].y && landmarks[12].y < landmarks[9].y) {
+                        blurTrigger = true;
+                    }
+                }
+            }
+
+            if (blurTrigger) {
+                konten.classList.add('blur-aktif');
+                if (musik.paused) musik.play();
+            } else {
+                konten.classList.remove('blur-aktif');
+            }
+            requestAnimationFrame(predict);
+        }
+
+        btnMulai.onclick = init;
     </script>
 </body>
 </html>
