@@ -22,7 +22,6 @@
 
         .container { width: 100%; max-width: 420px; position: relative; }
         .card { background: white; border: var(--border-black); box-shadow: var(--shadow-black); padding: 25px; margin-bottom: 20px; position: relative; }
-        
         .top-badge { background: var(--btn-green); border: var(--border-black); padding: 5px 15px; font-weight: bold; font-size: 12px; position: absolute; top: -15px; left: 20px; z-index: 10; }
         .header-title { display: flex; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; }
         .icon-box { background: var(--box-cyan); border: var(--border-black); width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 4px 4px 0px black; }
@@ -46,7 +45,7 @@
         
         .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
         
-        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.25s ease; }
+        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.2s ease; }
         .blur-aktif { filter: blur(22px); }
 
         #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
@@ -62,11 +61,11 @@
         <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
             <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita Blur</h1></div>
-            <p>Hanya gestur <strong>Telunjuk + Tengah</strong> yang aktifkan blur.<br>Jari lain tidak akan mempengaruhi.</p>
+            <p>Hanya <strong>Telunjuk + Tengah</strong> yang aktifkan blur.<br>Jari lain tidak berpengaruh.</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN</div><div>📱 BISA RAME-RAME</div></div>
+            <div class="info-text"><div>🔒 PRIVASI AMAN • DETEKSI KETAT</div></div>
         </div>
         <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
@@ -82,7 +81,7 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: red;">TUNJUKKAN TELUNJUK + TENGAH...</span></div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: red;">TUNJUKKAN TELUNJUK + TENGAH SAJA</span></div>
                 <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
             </div>
         </div>
@@ -157,7 +156,7 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Gambar overlay
+                    // Draw
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
@@ -171,17 +170,16 @@
                     }
                     canvasCtx.stroke();
 
-                    // === DETEKSI KETAT HANYA TELUNJUK + TENGAH ===
-                    const wrist = landmarks[0];
-                    
-                    const telunjukNaik = getJarak(landmarks[8], wrist) > getJarak(landmarks[6], wrist) * 1.3;
-                    const tengahNaik   = getJarak(landmarks[12], wrist) > getJarak(landmarks[10], wrist) * 1.3;
-                    
-                    const jempolTurun  = getJarak(landmarks[4], wrist) < getJarak(landmarks[3], wrist) * 1.2;
-                    const manisTurun   = getJarak(landmarks[16], wrist) < getJarak(landmarks[14], wrist) * 0.9;
-                    const kelingkingTurun = getJarak(landmarks[20], wrist) < getJarak(landmarks[18], wrist) * 0.9;
+                    // DETEKSI SUPER KETAT
+                    const w = landmarks[0];
+                    const telunjukNaik = getJarak(landmarks[8], w) > getJarak(landmarks[5], w) * 1.4;   // lebih ketat
+                    const tengahNaik   = getJarak(landmarks[12], w) > getJarak(landmarks[9], w) * 1.4;
 
-                    if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
+                    const jempolTurun  = getJarak(landmarks[4], w) < getJarak(landmarks[3], w) * 1.1;
+                    const manisTurun   = getJarak(landmarks[16], w) < getJarak(landmarks[13], w) * 1.0;
+                    const kelingkingTurun = getJarak(landmarks[20], w) < getJarak(landmarks[17], w) * 1.0;
+
+                    if (telunjukNaik && tengahNaik && jempolTurun && manisTurun && kelingkingTurun) {
                         gayaDuaJari = true;
                         break;
                     }
@@ -210,8 +208,8 @@
 
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "BLUR NYALA ✅ (Telunjuk + Tengah)" : 
-                    "BLUR MATI - Turunkan / Kepal tangan";
+                    "✅ BLUR NYALA (Telunjuk+Tengah)" : 
+                    "⭕ BLUR MATI - Turunkan tangan";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
@@ -221,21 +219,21 @@
             let waktu = 3;
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
-            statusText.innerText = "TAHAN GESTUR... " + waktu;
+            statusText.innerText = "TAHAN... " + waktu;
             statusText.style.color = "#ffca3a";
 
             countdownTimer = setInterval(() => {
                 waktu--;
                 if (waktu > 0) {
                     angkaCountdown.innerText = waktu;
-                    statusText.innerText = "TAHAN GESTUR... " + waktu;
+                    statusText.innerText = "TAHAN... " + waktu;
                 } else {
                     clearInterval(countdownTimer);
                     angkaCountdown.classList.add('hidden');
                     isUnlocked = true;
                     isCounting = false;
                     audio.play();
-                    statusText.innerText = "AUDIO PLAY - Gestur kontrol blur";
+                    statusText.innerText = "AUDIO PLAY";
                     statusText.style.color = "#4ade80";
                 }
             }, 1000);
