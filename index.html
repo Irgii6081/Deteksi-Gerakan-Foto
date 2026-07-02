@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foto Kita Blur.</title>
+    <title>Foto Kita Blur</title>
     <style>
         :root {
             --bg-pink: #ff529a;
@@ -59,14 +59,14 @@
 <body>
 
     <div id="landing-page" class="container">
-        <div class="top-badge">TREND 2026 // SAL PRIADIp</div>
+        <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
-            <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita Blur</h1></div>
-            <p>Hanya <strong>Telunjuk + Tengah</strong> yang aktifkan blur.<br>Fleksibel sedikit tapi ketat.</p>
+            <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita<br>Blur</h1></div>
+            <p><strong>Hanya Telunjuk + Tengah</strong><br>Jempol naik atau tangan dikepal = blur mati</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN</div></div>
+            <div class="info-text"><div>🔒 PRIVASI AMAN • DETEKSI KETAT</div></div>
         </div>
         <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
@@ -171,26 +171,21 @@
                     }
                     canvasCtx.stroke();
 
-                    // DETEKSI KETAT TAPI MASIH MENDUKUNG SEDIKIT ROTASI
-                    const t8 = landmarks[8];   // telunjuk tip
-                    const t6 = landmarks[6];   // telunjuk pip
-                    const t12 = landmarks[12]; // tengah tip
-                    const t10 = landmarks[10]; // tengah pip
+                    const t8 = landmarks[8], t6 = landmarks[6];   // Telunjuk
+                    const t12 = landmarks[12], t10 = landmarks[10]; // Tengah
+                    const t4 = landmarks[4];   // Jempol
+                    const t16 = landmarks[16]; // Manis
+                    const t20 = landmarks[20]; // Kelingking
 
-                    const t16 = landmarks[16]; // manis tip
-                    const t20 = landmarks[20]; // kelingking tip
-                    const t4 = landmarks[4];   // jempol tip
+                    // Harus sangat ketat
+                    const telunjukNaik = t8.y < t6.y - 0.12;
+                    const tengahNaik   = t12.y < t10.y - 0.12;
 
-                    // Telunjuk dan Tengah harus jelas naik
-                    const telunjukNaik = (t8.y < t6.y - 0.09) || (Math.hypot(t8.x - t6.x, t8.y - t6.y) > 0.12);
-                    const tengahNaik   = (t12.y < t10.y - 0.09) || (Math.hypot(t12.x - t10.x, t12.y - t10.y) > 0.12);
+                    const jempolTurun  = t4.y > t6.y - 0.08;
+                    const manisTurun   = t16.y > t10.y - 0.06;
+                    const kelingkingTurun = t20.y > t10.y - 0.06;
 
-                    // Jari lain harus jelas turun
-                    const manisTurun = t16.y > t10.y - 0.08;
-                    const kelingkingTurun = t20.y > t10.y - 0.08;
-                    const jempolTurun = t4.y > t6.y - 0.1 || getJarak(t4, landmarks[0]) < 0.15;
-
-                    if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
+                    if (telunjukNaik && tengahNaik && jempolTurun && manisTurun && kelingkingTurun) {
                         gayaDuaJari = true;
                         break;
                     }
@@ -199,7 +194,6 @@
 
             canvasCtx.restore();
 
-            // Logika Blur
             if (butuhResetTangan) {
                 if (!gayaDuaJari) butuhResetTangan = false;
                 return;
@@ -219,8 +213,8 @@
 
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "✅ BLUR NYALA (Telunjuk + Tengah)" : 
-                    "⭕ BLUR MATI";
+                    "✅ BLUR NYALA" : 
+                    "⭕ BLUR MATI (Turunkan / Kepal)";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
