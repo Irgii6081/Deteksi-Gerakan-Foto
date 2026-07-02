@@ -62,7 +62,7 @@
         <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
             <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita<br>Blur</h1></div>
-            <p><strong>Hanya Telunjuk + Tengah</strong><br>Jempol naik atau tangan dikepal = blur mati</p>
+            <p>Hanya <strong>Telunjuk + Tengah</strong>.<br>Jempol naik atau tangan dikepal = blur mati.</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
@@ -157,7 +157,6 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Gambar overlay
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
@@ -171,19 +170,20 @@
                     }
                     canvasCtx.stroke();
 
-                    const t8 = landmarks[8], t6 = landmarks[6];   // Telunjuk
-                    const t12 = landmarks[12], t10 = landmarks[10]; // Tengah
+                    const t8 = landmarks[8], t6 = landmarks[6];
+                    const t12 = landmarks[12], t10 = landmarks[10];
                     const t4 = landmarks[4];   // Jempol
-                    const t16 = landmarks[16]; // Manis
-                    const t20 = landmarks[20]; // Kelingking
+                    const t16 = landmarks[16];
+                    const t20 = landmarks[20];
 
-                    // Harus sangat ketat
-                    const telunjukNaik = t8.y < t6.y - 0.12;
-                    const tengahNaik   = t12.y < t10.y - 0.12;
+                    const telunjukNaik = t8.y < t6.y - 0.13;
+                    const tengahNaik   = t12.y < t10.y - 0.13;
 
-                    const jempolTurun  = t4.y > t6.y - 0.08;
-                    const manisTurun   = t16.y > t10.y - 0.06;
-                    const kelingkingTurun = t20.y > t10.y - 0.06;
+                    // Jempol harus benar-benar turun
+                    const jempolTurun = getJarak(t4, landmarks[0]) < getJarak(t4, landmarks[5]) * 1.1;
+
+                    const manisTurun = t16.y > t10.y - 0.07;
+                    const kelingkingTurun = t20.y > t10.y - 0.07;
 
                     if (telunjukNaik && tengahNaik && jempolTurun && manisTurun && kelingkingTurun) {
                         gayaDuaJari = true;
@@ -214,7 +214,7 @@
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
                     "✅ BLUR NYALA" : 
-                    "⭕ BLUR MATI (Turunkan / Kepal)";
+                    "⭕ BLUR MATI";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
