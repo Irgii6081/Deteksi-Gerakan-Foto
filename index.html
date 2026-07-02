@@ -45,18 +45,14 @@
         .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
         
         .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
+        
         #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.2s ease; will-change: filter; }
-        
-        /* CSS untuk Canvas Garis Debugging */
-        #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
-        
         .blur-aktif { filter: blur(20px); }
 
-        #angka-countdown {
-            position: absolute; font-size: 100px; color: white; font-weight: bold;
-            text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10;
-        }
-
+        /* CANVAS GARIS HIJAU (Tidak ikut terblur saat video blur) */
+        #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
+        
+        #angka-countdown { position: absolute; font-size: 100px; color: white; font-weight: bold; text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10; }
         .camera-status { padding: 15px; font-family: monospace; font-size: 12px; }
         .status-box { border: 1px dashed black; padding: 10px; margin-bottom: 10px; font-weight: bold; }
     </style>
@@ -67,7 +63,7 @@
         <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
             <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita<br>Blur</h1></div>
-            <p>Izinkan akses kamera untuk mendeteksi gestur 2 jari Anda secara real-time dan memicu efek blur otomatis saat lagu dimainkan.</p>
+            <p>Izinkan akses kamera untuk mendeteksi gestur 2 jari Anda secara real-time dan memicu efek blur otomatis.</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
@@ -100,7 +96,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 
     <script>
         const videoElement = document.getElementById('webcam');
@@ -123,7 +118,6 @@
             videoElement.classList.remove('blur-aktif');
             statusText.innerText = "LAGU HABIS. TURUNKAN TANGAN DULU...";
             statusText.style.color = "red";
-            
             audio.currentTime = 0; 
         });
 
@@ -145,20 +139,25 @@
             hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
-            videoElement.addEventListener('loadeddata', () => {
-                // Menyesuaikan ukuran canvas dengan resolusi asli video
-                canvasElement.width = videoElement.videoWidth;
-                canvasElement.height = videoElement.videoHeight;
-                prosesFrame();
-            });
-
-            async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
+            async function prosesFrame() { 
+                // Pastikan video sudah memiliki ukuran sebelum diproses AI (mencegah crash)
+                if(videoElement.videoWidth > 0) {
+                    // Update ukuran canvas agar pas persis dengan ukuran kamera HP
+                    if(canvasElement.width !== videoElement.videoWidth) {
+                        canvasElement.width = videoElement.videoWidth;
+                        canvasElement.height = videoElement.videoHeight;
+                    }
+                    await hands.send({image: videoElement}); 
+                }
+                requestAnimationFrame(prosesFrame); 
+            }
+            videoElement.addEventListener('loadeddata', prosesFrame);
         }
 
         const getJarak = (p1, p2) => (p1.x - p2.x)**2 + (p1.y - p2.y)**2;
 
         function onResults(results) {
-            // BERSIHKAN CANVAS SETIAP FRAME BARU
+            // BERSIHKAN CANVAS LALU GAMBAR ULANG SETIAP KALI TANGAN BERGERAK
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
@@ -167,9 +166,37 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
-                    // GAMBAR GARIS HIJAU DAN TITIK MERAH (DEBUG MODE)
-                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
-                    drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
+                    // ==============================================
+                    // MENGGAMBAR GARIS HIJAU (DEBUG MODE MANUAL)
+                    // ==============================================
+                    canvasCtx.strokeStyle = '#00FF00'; // Warna Hijau Neon
+                    canvasCtx.lineWidth = 4;
+                    canvasCtx.beginPath();
+                    
+                    // Hubungan tulang jari
+                    const tulang = [
+                        [0,1,2,3,4], [0,5,6,7,8], [0,9,10,11,12], [0,13,14,15,16], [0,17,18,19,20], [5,9,13,17]
+                    ];
+                    
+                    for (let j = 0; j < tulang.length; j++) {
+                        let ruas = tulang[j];
+                        for (let k = 0; k < ruas.length - 1; k++) {
+                            canvasCtx.moveTo(landmarks[ruas[k]].x * canvasElement.width, landmarks[ruas[k]].y * canvasElement.height);
+                            canvasCtx.lineTo(landmarks[ruas[k+1]].x * canvasElement.width, landmarks[ruas[k+1]].y * canvasElement.height);
+                        }
+                    }
+                    canvasCtx.stroke();
+
+                    // Menggambar Titik Sendi Merah
+                    canvasCtx.fillStyle = '#FF0000';
+                    for (let i = 0; i < landmarks.length; i++) {
+                        const x = landmarks[i].x * canvasElement.width;
+                        const y = landmarks[i].y * canvasElement.height;
+                        canvasCtx.beginPath();
+                        canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
+                        canvasCtx.fill();
+                    }
+                    // ==============================================
 
                     const pergelangan = landmarks[0];
 
@@ -178,11 +205,12 @@
                     const isManisTurun = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan);
                     const isKelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan);
 
-                    const isJempolTurun = getJarak(landmarks[4], landmarks[13]) < getJarak(landmarks[4], landmarks[5]);
+                    // Jempol ditekuk ke dalam 
+                    const isJempolTurun = getJarak(landmarks[4], landmarks[17]) < getJarak(landmarks[4], landmarks[5]);
                     
                     if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun && isJempolTurun) {
                         gayaDuaJari = true; 
-                        break; // Cukup 1 tangan yang gaya 2 jari
+                        break; 
                     }
                 }
             }
@@ -201,6 +229,7 @@
                     batalkanHitungMundur();
                 }
 
+                // Blur hanya akan aktif saat sedang menghitung atau saat musik sedang jalan
                 if (isUnlocked || isCounting) {
                     videoElement.classList.add('blur-aktif');
                 } else {
