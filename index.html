@@ -45,7 +45,11 @@
         .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
         
         .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
-        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.3s ease; will-change: filter; }
+        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.2s ease; will-change: filter; }
+        
+        /* CSS untuk Canvas Garis Debugging */
+        #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
+        
         .blur-aktif { filter: blur(20px); }
 
         #angka-countdown {
@@ -78,6 +82,7 @@
             
             <div class="video-wrapper">
                 <video id="webcam" autoplay playsinline></video>
+                <canvas id="output_canvas"></canvas>
                 <div id="angka-countdown" class="hidden">3</div>
             </div>
 
@@ -95,9 +100,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 
     <script>
         const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
         const audio = document.getElementById('musik');
         const statusText = document.getElementById('status-text');
         const angkaCountdown = document.getElementById('angka-countdown');
@@ -134,44 +142,53 @@
             } catch (err) { alert("Izinkan kamera ya!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
+            videoElement.addEventListener('loadeddata', () => {
+                // Menyesuaikan ukuran canvas dengan resolusi asli video
+                canvasElement.width = videoElement.videoWidth;
+                canvasElement.height = videoElement.videoHeight;
+                prosesFrame();
+            });
+
             async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
-            videoElement.addEventListener('loadeddata', prosesFrame);
         }
 
-        // FUNGSI MATEMATIKA ANTI-MIRING: Menghitung jarak antara dua titik koordinat
-        function hitungJarak(titik1, titik2) {
-            return Math.sqrt(Math.pow(titik1.x - titik2.x, 2) + Math.pow(titik1.y - titik2.y, 2));
-        }
+        const getJarak = (p1, p2) => (p1.x - p2.x)**2 + (p1.y - p2.y)**2;
 
         function onResults(results) {
+            // BERSIHKAN CANVAS SETIAP FRAME BARU
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
             let gayaDuaJari = false;
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
+                    // GAMBAR GARIS HIJAU DAN TITIK MERAH (DEBUG MODE)
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
+                    drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
+
                     const pergelangan = landmarks[0];
-                    const pangkalKelingking = landmarks[17];
 
-                    // LOGIKA BARU: Cek jarak ke pergelangan tangan (0). Jika ditekuk, ujung jari pasti lebih dekat ke pergelangan dibanding ruasnya.
-                    const isTelunjukNaik = hitungJarak(landmarks[8], pergelangan) > hitungJarak(landmarks[6], pergelangan);
-                    const isTengahNaik = hitungJarak(landmarks[12], pergelangan) > hitungJarak(landmarks[10], pergelangan);
-                    const isManisTurun = hitungJarak(landmarks[16], pergelangan) < hitungJarak(landmarks[14], pergelangan);
-                    const isKelingkingTurun = hitungJarak(landmarks[20], pergelangan) < hitungJarak(landmarks[18], pergelangan);
+                    const isTelunjukNaik = getJarak(landmarks[8], pergelangan) > getJarak(landmarks[6], pergelangan);
+                    const isTengahNaik = getJarak(landmarks[12], pergelangan) > getJarak(landmarks[10], pergelangan);
+                    const isManisTurun = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan);
+                    const isKelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan);
 
-                    // LOGIKA JEMPOL: Jempol yang terbuka (seperti fotomu) jaraknya akan jauh dari pangkal kelingking (17).
-                    // Jika jempol ditutup/ditekuk, ujung jempol (4) akan mendekat ke telapak tangan.
-                    const isJempolTurun = hitungJarak(landmarks[4], pangkalKelingking) < hitungJarak(landmarks[3], pangkalKelingking);
+                    const isJempolTurun = getJarak(landmarks[4], landmarks[13]) < getJarak(landmarks[4], landmarks[5]);
                     
                     if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun && isJempolTurun) {
                         gayaDuaJari = true; 
-                        break;
+                        break; // Cukup 1 tangan yang gaya 2 jari
                     }
                 }
             }
+            canvasCtx.restore();
 
+            // LOGIKA EFEK & COUNTDOWN
             if (butuhResetTangan) {
                 if (!gayaDuaJari) {
                     butuhResetTangan = false; 
@@ -184,7 +201,6 @@
                     batalkanHitungMundur();
                 }
 
-                // Efek blur langsung bereaksi walau lagu belum mulai!
                 if (isUnlocked || isCounting) {
                     videoElement.classList.add('blur-aktif');
                 } else {
@@ -197,7 +213,6 @@
             isCounting = true;
             let waktu = 3;
             
-            // Blur langsung aktif di detik pertama hitung mundur
             videoElement.classList.add('blur-aktif'); 
             
             angkaCountdown.innerText = waktu;
@@ -228,7 +243,6 @@
             clearInterval(countdownTimer);
             isCounting = false;
             
-            // Hilangkan blur jika batal nahan jari
             videoElement.classList.remove('blur-aktif');
             
             angkaCountdown.classList.add('hidden');
