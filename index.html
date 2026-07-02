@@ -44,11 +44,11 @@
         .camera-topbar { background: black; color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; }
         .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
         
-        .video-wrapper { position: relative; width: 100%; background: #222; aspect-ratio: 3/4; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.4s ease-out; will-change: filter; }
-        .blur-aktif { filter: blur(15px); }
+        /* Perbaikan CSS Kamera agar tidak nge-zoom */
+        .video-wrapper { position: relative; width: 100%; height: 500px; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.3s ease; will-change: filter; }
+        .blur-aktif { filter: blur(20px); }
 
-        /* Tampilan Angka Hitung Mundur */
         #angka-countdown {
             position: absolute; font-size: 100px; color: white; font-weight: bold;
             text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10;
@@ -84,17 +84,14 @@
 
             <div class="camera-status">
                 <div class="status-box">STATUS: <span id="status-text" style="color: red;">MENUNGGU GESTUR 2 JARI...</span></div>
-                <div>🎵 SAL PRIADI - FOTO KITA BLUR (ACTIVE EFFECT LOOP)</div>
+                <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
             </div>
         </div>
         <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
-    <audio id="musik" loop>
+    <audio id="musik" loop preload="auto">
         <source src="cobain web foto kita blur abidfaizsaladin.com_blur #fotokitablur #koding #programmer #ngoding #informatika .mp3" type="audio/mpeg">
-    </audio>
-    <audio id="suara-klik">
-        <source src="cobain web foto kita blur abidfaizsaladin.com_blur #fotokitablur #koding #programmer #ngoding #informatika .mp3" type="audio/mpeg"> 
     </audio>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -103,28 +100,31 @@
     <script>
         const videoElement = document.getElementById('webcam');
         const audio = document.getElementById('musik');
-        const clickSound = document.getElementById('suara-klik');
         const statusText = document.getElementById('status-text');
         const angkaCountdown = document.getElementById('angka-countdown');
 
-        let isUnlocked = false;    // Apakah musik sudah terbuka?
-        let isCounting = false;    // Apakah sedang hitung mundur?
+        let isUnlocked = false;    
+        let isCounting = false;    
         let countdownTimer;
 
         async function mulaiAplikasi() {
-            // Mainkan suara klik
-            clickSound.play().catch(e => console.log("Gagal putar suara klik"));
+            // Trik Unlock Audio: Paksa play lalu pause seketika
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(e => console.log("Menunggu interaksi manual user untuk audio"));
 
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 640, facingMode: "user" } });
+                // Hapus batasan rasio agar tidak nge-zoom
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoElement.srcObject = stream;
             } catch (err) { alert("Izinkan kamera ya!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 4, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
             async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
@@ -136,25 +136,26 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    const isTelunjukNaik = landmarks[8].y < landmarks[6].y;
-                    const isTengahNaik = landmarks[12].y < landmarks[10].y;
-                    const isManisTurun = landmarks[16].y > landmarks[14].y;
-                    const isKelingkingTurun = landmarks[20].y > landmarks[18].y;
-
-                    if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun) {
+                    
+                    // Logika Dipermudah: Hanya cek Telunjuk (8) dan Tengah (12) di atas pangkalnya (5 & 9)
+                    // Lebih sensitif meskipun tangan ada di pinggir layar atau terlalu dekat
+                    const isTelunjukNaik = landmarks[8].y < landmarks[5].y;
+                    const isTengahNaik = landmarks[12].y < landmarks[9].y;
+                    const isManisTurun = landmarks[16].y > landmarks[13].y;
+                    
+                    // Cukup 3 kondisi ini agar deteksi lebih luwes
+                    if (isTelunjukNaik && isTengahNaik && isManisTurun) {
                         gayaDuaJari = true; break;
                     }
                 }
             }
 
-            // Logika Hitung Mundur & Unlock
             if (gayaDuaJari && !isUnlocked && !isCounting) {
                 mulaiHitungMundur();
             } else if (!gayaDuaJari && isCounting) {
                 batalkanHitungMundur();
             }
 
-            // Logika Visual Setelah Unlocked (Tangan Naik = Blur, Turun = Jernih)
             if (isUnlocked) {
                 if (gayaDuaJari) {
                     videoElement.classList.add('blur-aktif');
@@ -170,7 +171,7 @@
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
             statusText.innerText = "MENAHAN GESTUR... " + waktu;
-            statusText.style.color = "#ffca3a"; // Warna kuning
+            statusText.style.color = "#ffca3a"; 
 
             countdownTimer = setInterval(() => {
                 waktu--;
@@ -182,10 +183,13 @@
                     angkaCountdown.classList.add('hidden');
                     isUnlocked = true;
                     isCounting = false;
-                    audio.play(); // Nyalakan musik
+                    
+                    // Mainkan musik sekarang (pasti berhasil karena sudah di-unlock di awal)
+                    audio.play(); 
+                    
                     videoElement.classList.add('blur-aktif');
                     statusText.innerText = "AUDIO UNLOCKED VIA GESTURE.";
-                    statusText.style.color = "#4ade80"; // Warna hijau
+                    statusText.style.color = "#4ade80"; 
                 }
             }, 1000);
         }
