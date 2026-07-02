@@ -1,1 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blur Effect App</title>
+    <style>
+        :root {
+            --accent-color: #ffca3a; /* Warna kuning cerah */
+            --bg-color: #121212; /* Background gelap */
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #1e1e1e;
+            padding: 2rem;
+            border-radius: 20px;
+            border: 2px solid var(--accent-color);
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        button {
+            background-color: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .hidden { display: none; }
+        #webcam { width: 100%; border-radius: 15px; transform: scaleX(-1); }
+        .blur-active { filter: blur(15px); transition: 0.3s; }
+    </style>
+</head>
+<body>
 
+    <div id="landing" class="card">
+        <h2>Foto Kita Blur</h2>
+        <p>Aplikasi deteksi gestur tangan.</p>
+        <button onclick="startApp()">AKTIFKAN KAMERA</button>
+    </div>
+
+    <div id="app" class="hidden">
+        <video id="webcam" autoplay playsinline></video>
+        <audio id="music" loop>
+            <source src="lagu-anda.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
+    <script>
+        async function startApp() {
+            document.getElementById('landing').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            const video = document.getElementById('webcam');
+            const audio = document.getElementById('music');
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            
+            // Logika deteksi nanti akan dimasukkan di sini
+            // Saat 2 jari terdeteksi:
+            // video.classList.add('blur-active');
+            // audio.play();
+        }
+    </script>
+</body>
+</html>
