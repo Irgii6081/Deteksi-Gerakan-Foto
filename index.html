@@ -3,81 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foto Kita Blur - Pro</title>
+    <title>Foto Kita Blur - Tren TikTok</title>
     <style>
-        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
-        
-        /* Konten utama yang akan diblur */
-        #konten { transition: filter 0.2s ease-out; will-change: filter; color: white; text-align: center; font-size: 2rem; z-index: 1; }
-        .blur-aktif { filter: blur(20px); }
+        :root {
+            --bg-pink: #ff529a;
+            --btn-green: #4ade80;
+            --box-cyan: #06b6d4;
+            --border-black: 3px solid black;
+            --shadow-black: 6px 6px 0px black;
+        }
 
-        /* Kamera */
-        #webcam { position: fixed; bottom: 10px; right: 10px; width: 120px; height: 160px; transform: scaleX(-1); border-radius: 10px; border: 2px solid #fff; object-fit: cover; }
+        body {
+            margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-pink);
+            background-image: radial-gradient(#cc3574 2px, transparent 2px); background-size: 20px 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px; box-sizing: border-box;
+        }
+
+        .container { width: 100%; max-width: 400px; position: relative; }
+        .card { background: white; border: var(--border-black); box-shadow: var(--shadow-black); padding: 25px; margin-bottom: 20px; position: relative; }
         
-        /* Tombol Start */
-        #btn-mulai { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #32ff7e; border: none; border-radius: 10px; }
+        .top-badge { background: var(--btn-green); border: var(--border-black); padding: 5px 15px; font-weight: bold; font-size: 12px; position: absolute; top: -15px; left: 20px; z-index: 10; }
+        .header-title { display: flex; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; }
+        .icon-box { background: var(--box-cyan); border: var(--border-black); width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 4px 4px 0px black; }
+        h1 { margin: 0; font-size: 28px; line-height: 1.1; text-transform: uppercase; }
+        p { font-family: monospace; font-size: 14px; margin-bottom: 20px; }
+        hr { border: 0; border-top: 3px solid black; margin: 20px 0; }
+        .dashed-line { border-top: 1px dashed black; }
+
+        button { width: 100%; background: var(--btn-green); color: black; border: var(--border-black); box-shadow: var(--shadow-black); padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.1s; }
+        button:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0px black; }
+
+        .info-text { font-family: monospace; font-size: 12px; margin-top: 15px; }
+        .info-text div { margin-bottom: 8px; }
+        .footer { background: white; border: var(--border-black); padding: 15px; text-align: center; font-weight: bold; font-size: 12px; width: 100%; box-sizing: border-box; }
+
+        .hidden { display: none !important; }
+
+        .camera-card { padding: 0; overflow: hidden; }
+        .camera-topbar { background: black; color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; }
+        .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
+        
+        .video-wrapper { position: relative; width: 100%; background: #222; aspect-ratio: 3/4; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.4s ease-out; will-change: filter; }
+        .blur-aktif { filter: blur(15px); }
+
+        /* Tampilan Angka Hitung Mundur */
+        #angka-countdown {
+            position: absolute; font-size: 100px; color: white; font-weight: bold;
+            text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10;
+        }
+
+        .camera-status { padding: 15px; font-family: monospace; font-size: 12px; }
+        .status-box { border: 1px dashed black; padding: 10px; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <button id="btn-mulai">MULAI KAMERA</button>
-    <div id="konten">Tunjukkan 2 Jari!</div>
-    <video id="webcam" autoplay playsinline class="hidden"></video>
-    <audio id="musik" loop><source src="cobain web foto kita blur abidfaizsaladin.com_blur #fotokitablur #koding #programmer #ngoding #informatika .mp3" type="audio/mpeg"></audio>
+    <div id="landing-page" class="container">
+        <div class="top-badge">TREND 2026 // SAL PRIADI</div>
+        <div class="card">
+            <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita<br>Blur</h1></div>
+            <p>Izinkan akses kamera untuk mendeteksi gestur 2 jari Anda secara real-time dan memicu efek blur otomatis saat lagu dimainkan.</p>
+            <hr>
+            <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
+            <hr class="dashed-line">
+            <div class="info-text"><div>🔒 PRIVASI AMAN (PROSES LOKAL)</div><div>📱 SEMUA BROWSER OK</div></div>
+        </div>
+        <div class="footer">MADE WITH ❤️ BY ANDA</div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
+    <div id="camera-page" class="container hidden">
+        <div class="card camera-card">
+            <div class="camera-topbar"><span class="badge-scan">🔍 SCANNING</span><span>• LIVE VIEWFINDER</span><span>🔊</span></div>
+            
+            <div class="video-wrapper">
+                <video id="webcam" autoplay playsinline></video>
+                <div id="angka-countdown" class="hidden">3</div>
+            </div>
 
-    <script type="module">
-        import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js";
+            <div class="camera-status">
+                <div class="status-box">STATUS: <span id="status-text" style="color: red;">MENUNGGU GESTUR 2 JARI...</span></div>
+                <div>🎵 SAL PRIADI - FOTO KITA BLUR (ACTIVE EFFECT LOOP)</div>
+            </div>
+        </div>
+        <div class="footer">MADE WITH ❤️ BY ANDA</div>
+    </div>
 
-        const video = document.getElementById('webcam');
-        const konten = document.getElementById('konten');
-        const musik = document.getElementById('musik');
-        const btnMulai = document.getElementById('btn-mulai');
-        let handLandmarker;
+    <audio id="musik" loop>
+        <source src="cobain web foto kita blur abidfaizsaladin.com_blur #fotokitablur #koding #programmer #ngoding #informatika .mp3" type="audio/mpeg">
+    </audio>
+    <audio id="suara-klik">
+        <source src="klik.mp3" type="audio/mpeg"> 
+    </audio>
 
-        async function init() {
-            // Setup Kamera dengan resolusi rendah agar enteng
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 320, height: 240 } 
-            });
-            video.srcObject = stream;
-            video.classList.remove('hidden');
-            btnMulai.style.display = 'none';
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
-            // Setup AI
-            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task` },
-                numHands: 2 // Bisa deteksi 2 tangan sekaligus (rame orang)
-            });
-            predict();
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const audio = document.getElementById('musik');
+        const clickSound = document.getElementById('suara-klik');
+        const statusText = document.getElementById('status-text');
+        const angkaCountdown = document.getElementById('angka-countdown');
+
+        let isUnlocked = false;    // Apakah musik sudah terbuka?
+        let isCounting = false;    // Apakah sedang hitung mundur?
+        let countdownTimer;
+
+        async function mulaiAplikasi() {
+            // Mainkan suara klik
+            clickSound.play().catch(e => console.log("Gagal putar suara klik"));
+
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('camera-page').classList.remove('hidden');
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 640, facingMode: "user" } });
+                videoElement.srcObject = stream;
+            } catch (err) { alert("Izinkan kamera ya!"); return; }
+
+            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+            hands.setOptions({ maxNumHands: 4, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+            hands.onResults(onResults);
+
+            async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
+            videoElement.addEventListener('loadeddata', prosesFrame);
         }
 
-        function predict() {
-            const results = handLandmarker.detectForVideo(video, performance.now());
-            
-            let blurTrigger = false;
-            if (results.landmarks.length > 0) {
-                // Cek semua tangan yang terdeteksi
-                for (let landmarks of results.landmarks) {
-                    // Logika 2 jari: telunjuk(8) & tengah(12) tegak
-                    if (landmarks[8].y < landmarks[5].y && landmarks[12].y < landmarks[9].y) {
-                        blurTrigger = true;
+        function onResults(results) {
+            let gayaDuaJari = false;
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    const isTelunjukNaik = landmarks[8].y < landmarks[6].y;
+                    const isTengahNaik = landmarks[12].y < landmarks[10].y;
+                    const isManisTurun = landmarks[16].y > landmarks[14].y;
+                    const isKelingkingTurun = landmarks[20].y > landmarks[18].y;
+
+                    if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun) {
+                        gayaDuaJari = true; break;
                     }
                 }
             }
 
-            if (blurTrigger) {
-                konten.classList.add('blur-aktif');
-                if (musik.paused) musik.play();
-            } else {
-                konten.classList.remove('blur-aktif');
+            // Logika Hitung Mundur & Unlock
+            if (gayaDuaJari && !isUnlocked && !isCounting) {
+                mulaiHitungMundur();
+            } else if (!gayaDuaJari && isCounting) {
+                batalkanHitungMundur();
             }
-            requestAnimationFrame(predict);
+
+            // Logika Visual Setelah Unlocked (Tangan Naik = Blur, Turun = Jernih)
+            if (isUnlocked) {
+                if (gayaDuaJari) {
+                    videoElement.classList.add('blur-aktif');
+                } else {
+                    videoElement.classList.remove('blur-aktif');
+                }
+            }
         }
 
-        btnMulai.onclick = init;
+        function mulaiHitungMundur() {
+            isCounting = true;
+            let waktu = 3;
+            angkaCountdown.innerText = waktu;
+            angkaCountdown.classList.remove('hidden');
+            statusText.innerText = "MENAHAN GESTUR... " + waktu;
+            statusText.style.color = "#ffca3a"; // Warna kuning
+
+            countdownTimer = setInterval(() => {
+                waktu--;
+                if (waktu > 0) {
+                    angkaCountdown.innerText = waktu;
+                    statusText.innerText = "MENAHAN GESTUR... " + waktu;
+                } else {
+                    clearInterval(countdownTimer);
+                    angkaCountdown.classList.add('hidden');
+                    isUnlocked = true;
+                    isCounting = false;
+                    audio.play(); // Nyalakan musik
+                    videoElement.classList.add('blur-aktif');
+                    statusText.innerText = "AUDIO UNLOCKED VIA GESTURE.";
+                    statusText.style.color = "#4ade80"; // Warna hijau
+                }
+            }, 1000);
+        }
+
+        function batalkanHitungMundur() {
+            clearInterval(countdownTimer);
+            isCounting = false;
+            angkaCountdown.classList.add('hidden');
+            statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
+            statusText.style.color = "red";
+        }
     </script>
 </body>
 </html>
