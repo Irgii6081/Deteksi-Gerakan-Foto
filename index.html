@@ -14,46 +14,212 @@
         }
 
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-pink);
-            background-image: radial-gradient(#cc3574 2px, transparent 2px); background-size: 20px 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; padding: 20px; box-sizing: border-box;
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg-pink);
+            background-image: radial-gradient(#cc3574 2px, transparent 2px); 
+            background-size: 20px 20px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            min-height: 100vh; 
+            padding: 20px; 
+            box-sizing: border-box;
         }
 
-        .container { width: 100%; max-width: 400px; position: relative; }
-        .card { background: white; border: var(--border-black); box-shadow: var(--shadow-black); padding: 25px; margin-bottom: 20px; position: relative; }
+        .container { 
+            width: 100%; 
+            max-width: 400px; 
+            position: relative; 
+        }
         
-        .top-badge { background: var(--btn-green); border: var(--border-black); padding: 5px 15px; font-weight: bold; font-size: 12px; position: absolute; top: -15px; left: 20px; z-index: 10; }
-        .header-title { display: flex; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; }
-        .icon-box { background: var(--box-cyan); border: var(--border-black); width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 4px 4px 0px black; }
-        h1 { margin: 0; font-size: 28px; line-height: 1.1; text-transform: uppercase; }
-        p { font-family: monospace; font-size: 14px; margin-bottom: 20px; }
-        hr { border: 0; border-top: 3px solid black; margin: 20px 0; }
-        .dashed-line { border-top: 1px dashed black; }
-
-        button { width: 100%; background: var(--btn-green); color: black; border: var(--border-black); box-shadow: var(--shadow-black); padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.1s; }
-        button:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0px black; }
-
-        .info-text { font-family: monospace; font-size: 12px; margin-top: 15px; }
-        .info-text div { margin-bottom: 8px; }
-        .footer { background: white; border: var(--border-black); padding: 15px; text-align: center; font-weight: bold; font-size: 12px; width: 100%; box-sizing: border-box; }
-
-        .hidden { display: none !important; }
-
-        .camera-card { padding: 0; overflow: hidden; }
-        .camera-topbar { background: black; color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; }
-        .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
+        .card { 
+            background: white; 
+            border: var(--border-black); 
+            box-shadow: var(--shadow-black); 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            position: relative; 
+        }
         
-        .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
+        .top-badge { 
+            background: var(--btn-green); 
+            border: var(--border-black); 
+            padding: 5px 15px; 
+            font-weight: bold; 
+            font-size: 12px; 
+            position: absolute; 
+            top: -15px; 
+            left: 20px; 
+            z-index: 10; 
+        }
         
-        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.2s ease; will-change: filter; }
-        .blur-aktif { filter: blur(20px); }
+        .header-title { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            margin-top: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        .icon-box { 
+            background: var(--box-cyan); 
+            border: var(--border-black); 
+            width: 50px; 
+            height: 50px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 24px; 
+            box-shadow: 4px 4px 0px black; 
+        }
+        
+        h1 { 
+            margin: 0; 
+            font-size: 28px; 
+            line-height: 1.1; 
+            text-transform: uppercase; 
+        }
+        
+        p { 
+            font-family: monospace; 
+            font-size: 14px; 
+            margin-bottom: 20px; 
+        }
+        
+        hr { 
+            border: 0; 
+            border-top: 3px solid black; 
+            margin: 20px 0; 
+        }
+        
+        .dashed-line { 
+            border-top: 1px dashed black; 
+        }
 
-        #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
+        button { 
+            width: 100%; 
+            background: var(--btn-green); 
+            color: black; 
+            border: var(--border-black); 
+            box-shadow: var(--shadow-black); 
+            padding: 15px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.1s; 
+        }
         
-        #angka-countdown { position: absolute; font-size: 100px; color: white; font-weight: bold; text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10; }
-        .camera-status { padding: 15px; font-family: monospace; font-size: 12px; }
-        .status-box { border: 1px dashed black; padding: 10px; margin-bottom: 10px; font-weight: bold; }
+        button:active { 
+            transform: translate(4px, 4px); 
+            box-shadow: 2px 2px 0px black; 
+        }
+
+        .info-text { 
+            font-family: monospace; 
+            font-size: 12px; 
+            margin-top: 15px; 
+        }
+        
+        .info-text div { 
+            margin-bottom: 8px; 
+        }
+        
+        .footer { 
+            background: white; 
+            border: var(--border-black); 
+            padding: 15px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 12px; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
+
+        .hidden { 
+            display: none !important; 
+        }
+
+        .camera-card { 
+            padding: 0; 
+            overflow: hidden; 
+        }
+        
+        .camera-topbar { 
+            background: black; 
+            color: white; 
+            padding: 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 12px; 
+        }
+        
+        .badge-scan { 
+            background: yellow; 
+            color: black; 
+            padding: 3px 8px; 
+            font-weight: bold; 
+        }
+        
+        .video-wrapper { 
+            position: relative; 
+            width: 100%; 
+            height: auto; 
+            background: #222; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden; 
+            border-bottom: 2px solid black; 
+            border-top: 2px solid black; 
+        }
+        
+        #webcam { 
+            display: block; 
+            width: 100%; 
+            height: auto; 
+            transform: scaleX(-1); 
+            transition: filter 0.2s ease; 
+            will-change: filter; 
+        }
+        
+        .blur-aktif { 
+            filter: blur(20px); 
+        }
+
+        #output_canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            transform: scaleX(-1); 
+            z-index: 5; 
+            pointer-events: none; 
+        }
+        
+        #angka-countdown { 
+            position: absolute; 
+            font-size: 100px; 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 4px 4px 0px black, -2px -2px 0px black; 
+            z-index: 10; 
+        }
+        
+        .camera-status { 
+            padding: 15px; 
+            font-family: monospace; 
+            font-size: 12px; 
+        }
+        
+        .status-box { 
+            border: 1px dashed black; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            font-weight: bold; 
+        }
     </style>
 </head>
 <body>
@@ -61,19 +227,29 @@
     <div id="landing-page" class="container">
         <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
-            <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita<br>Blur</h1></div>
+            <div class="header-title">
+                <div class="icon-box">📷</div>
+                <h1>Foto Kita<br>Blur</h1>
+            </div>
             <p>Izinkan akses kamera untuk mendeteksi gestur 2 jari Anda secara real-time dan memicu efek blur otomatis.</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN (PROSES LOKAL)</div><div>📱 SEMUA BROWSER OK</div></div>
+            <div class="info-text">
+                <div>🔒 PRIVASI AMAN (PROSES LOKAL)</div>
+                <div>📱 SEMUA BROWSER OK</div>
+            </div>
         </div>
         <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
     <div id="camera-page" class="container hidden">
         <div class="card camera-card">
-            <div class="camera-topbar"><span class="badge-scan">🔍 SCANNING</span><span>• LIVE VIEWFINDER</span><span>🔊</span></div>
+            <div class="camera-topbar">
+                <span class="badge-scan">🔍 SCANNING</span>
+                <span>• LIVE VIEWFINDER</span>
+                <span>🔊</span>
+            </div>
             
             <div class="video-wrapper">
                 <video id="webcam" autoplay playsinline></video>
@@ -124,23 +300,33 @@
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
-            }).catch(e => console.log("Audio standby."));
+            }).catch(() => {});
 
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
                 videoElement.srcObject = stream;
-            } catch (err) { alert("Izinkan kamera ya!"); return; }
+            } catch (err) { 
+                alert("Izinkan akses kamera ya!"); 
+                return; 
+            }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            hands.setOptions({ 
+                maxNumHands: 2, 
+                modelComplexity: 0, 
+                minDetectionConfidence: 0.5, 
+                minTrackingConfidence: 0.5 
+            });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
-                if(videoElement.videoWidth > 0) {
-                    if(canvasElement.width !== videoElement.videoWidth) {
+                if (videoElement.videoWidth > 0) {
+                    if (canvasElement.width !== videoElement.videoWidth) {
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
                     }
@@ -157,14 +343,11 @@
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-            // Default: tidak ada gestur 2 jari
-            let gayaDuaJari = false; 
+            let gayaDuaJari = false;
 
-            // Jika tangan terdeteksi, evaluasi posisinya
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    
-                    // GAMBAR GARIS HIJAU MANUAL
+                    // Gambar overlay
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
@@ -178,7 +361,6 @@
                     }
                     canvasCtx.stroke();
 
-                    // GAMBAR TITIK MERAH
                     canvasCtx.fillStyle = '#FF0000';
                     for (let i = 0; i < landmarks.length; i++) {
                         const x = landmarks[i].x * canvasElement.width;
@@ -188,48 +370,51 @@
                         canvasCtx.fill();
                     }
 
-                    // LOGIKA DETEKSI 2 JARI
+                    // Deteksi Gestur 2 Jari
                     const pergelangan = landmarks[0];
-                    const isTelunjukNaik = getJarak(landmarks[8], pergelangan) > getJarak(landmarks[6], pergelangan);
-                    const isTengahNaik = getJarak(landmarks[12], pergelangan) > getJarak(landmarks[10], pergelangan);
-                    const isManisTurun = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan);
-                    const isKelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan);
-                    const isJempolTurun = getJarak(landmarks[4], landmarks[17]) < getJarak(landmarks[4], landmarks[5]);
-                    
-                    if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun && isJempolTurun) {
-                        gayaDuaJari = true; 
-                        break; 
+                    const telunjukNaik = getJarak(landmarks[8], pergelangan) > getJarak(landmarks[6], pergelangan) * 1.1;
+                    const tengahNaik   = getJarak(landmarks[12], pergelangan) > getJarak(landmarks[10], pergelangan) * 1.1;
+                    const manisTurun   = getJarak(landmarks[16], pergelangan) < getJarak(landmarks[14], pergelangan) * 0.9;
+                    const kelingkingTurun = getJarak(landmarks[20], pergelangan) < getJarak(landmarks[18], pergelangan) * 0.9;
+
+                    if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun) {
+                        gayaDuaJari = true;
+                        break;
                     }
                 }
             }
+
             canvasCtx.restore();
 
-            // ==========================================
-            // PERBAIKAN LOGIKA BLUR DI SINI
-            // ==========================================
+            // Logika Utama
             if (butuhResetTangan) {
                 if (!gayaDuaJari) {
-                    butuhResetTangan = false; 
+                    butuhResetTangan = false;
                     statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
+                    statusText.style.color = "red";
                 }
-            } else {
-                // Logika Hitung Mundur
-                if (gayaDuaJari && !isUnlocked && !isCounting) {
-                    mulaiHitungMundur();
-                } else if (!gayaDuaJari && isCounting) {
-                    batalkanHitungMundur();
-                }
+                return;
+            }
 
-                // LOGIKA EFEK BLUR:
-                // Blur HANYA NYALA JIKA:
-                // 1. Sedang hitung mundur (isCounting == true) ATAU
-                // 2. Musik sudah jalan (isUnlocked == true) DAN kamu sedang berpose 2 jari (gayaDuaJari == true)
-                if (isCounting || (isUnlocked && gayaDuaJari)) {
-                    videoElement.classList.add('blur-aktif');
-                } else {
-                    // Kalau lagu jalan tapi tangan dikepalkan/diturunkan, blur PASTI mati.
-                    videoElement.classList.remove('blur-aktif');
-                }
+            if (gayaDuaJari && !isUnlocked && !isCounting) {
+                mulaiHitungMundur();
+            } else if (!gayaDuaJari && isCounting) {
+                batalkanHitungMundur();
+            }
+
+            // Blur Logic (sudah diperbaiki)
+            if (isCounting || (isUnlocked && gayaDuaJari)) {
+                videoElement.classList.add('blur-aktif');
+            } else {
+                videoElement.classList.remove('blur-aktif');
+            }
+
+            // Status Text
+            if (isUnlocked) {
+                statusText.innerText = gayaDuaJari ? 
+                    "🎵 SEDANG PLAY - TAHAN 2 JARI" : 
+                    "🎵 PLAY - KE PAL / TURUNKAN TANGAN UNTUK MATIKAN BLUR";
+                statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
 
@@ -255,7 +440,7 @@
                     
                     audio.play(); 
                     
-                    statusText.innerText = "AUDIO UNLOCKED VIA GESTURE.";
+                    statusText.innerText = "AUDIO UNLOCKED! TAHAN 2 JARI UNTUK BLUR";
                     statusText.style.color = "#4ade80"; 
                 }
             }, 1000);
@@ -264,7 +449,6 @@
         function batalkanHitungMundur() {
             clearInterval(countdownTimer);
             isCounting = false;
-            
             angkaCountdown.classList.add('hidden');
             statusText.innerText = "MENUNGGU GESTUR 2 JARI...";
             statusText.style.color = "red";
