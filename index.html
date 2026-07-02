@@ -22,6 +22,7 @@
 
         .container { width: 100%; max-width: 420px; position: relative; }
         .card { background: white; border: var(--border-black); box-shadow: var(--shadow-black); padding: 25px; margin-bottom: 20px; position: relative; }
+        
         .top-badge { background: var(--btn-green); border: var(--border-black); padding: 5px 15px; font-weight: bold; font-size: 12px; position: absolute; top: -15px; left: 20px; z-index: 10; }
         .header-title { display: flex; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; }
         .icon-box { background: var(--box-cyan); border: var(--border-black); width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 4px 4px 0px black; }
@@ -45,7 +46,7 @@
         
         .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
         
-        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.2s ease; }
+        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.25s ease; }
         .blur-aktif { filter: blur(22px); }
 
         #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
@@ -61,11 +62,11 @@
         <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
             <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita Blur</h1></div>
-            <p>Hanya <strong>Telunjuk + Tengah</strong> yang aktifkan blur.<br>Jari lain tidak berpengaruh.</p>
+            <p>Gestur Telunjuk + Tengah (bisa tangan kiri/kanan, menyamping, atau agak belakang).</p>
             <hr>
             <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
             <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN • DETEKSI KETAT</div></div>
+            <div class="info-text"><div>🔒 PRIVASI AMAN • FLEKSIBEL</div></div>
         </div>
         <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
@@ -81,7 +82,7 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: red;">TUNJUKKAN TELUNJUK + TENGAH SAJA</span></div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: red;">ANGKAT TELUNJUK + TENGAH</span></div>
                 <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
             </div>
         </div>
@@ -130,7 +131,12 @@
             } catch (err) { alert("Izinkan kamera!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 4, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            hands.setOptions({ 
+                maxNumHands: 4, 
+                modelComplexity: 0, 
+                minDetectionConfidence: 0.5, 
+                minTrackingConfidence: 0.5 
+            });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
@@ -146,8 +152,6 @@
             videoElement.addEventListener('loadeddata', prosesFrame);
         }
 
-        const getJarak = (p1, p2) => (p1.x - p2.x)**2 + (p1.y - p2.y)**2;
-
         function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -156,7 +160,7 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Draw
+                    // Gambar overlay
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
@@ -170,16 +174,23 @@
                     }
                     canvasCtx.stroke();
 
-                    // DETEKSI SUPER KETAT
-                    const w = landmarks[0];
-                    const telunjukNaik = getJarak(landmarks[8], w) > getJarak(landmarks[5], w) * 1.4;   // lebih ketat
-                    const tengahNaik   = getJarak(landmarks[12], w) > getJarak(landmarks[9], w) * 1.4;
+                    // Deteksi fleksibel (tangan kiri/kanan, menyamping, agak belakang)
+                    const t8 = landmarks[8];  // telunjuk tip
+                    const t6 = landmarks[6];  // telunjuk pip
+                    const t12 = landmarks[12]; // tengah tip
+                    const t10 = landmarks[10]; // tengah pip
 
-                    const jempolTurun  = getJarak(landmarks[4], w) < getJarak(landmarks[3], w) * 1.1;
-                    const manisTurun   = getJarak(landmarks[16], w) < getJarak(landmarks[13], w) * 1.0;
-                    const kelingkingTurun = getJarak(landmarks[20], w) < getJarak(landmarks[17], w) * 1.0;
+                    const t16 = landmarks[16]; // manis
+                    const t20 = landmarks[20]; // kelingking
 
-                    if (telunjukNaik && tengahNaik && jempolTurun && manisTurun && kelingkingTurun) {
+                    // Cek apakah telunjuk dan tengah lebih panjang / extended
+                    const telunjukExtended = (t8.y < t6.y - 0.07) || (Math.abs(t8.x - t6.x) > 0.08);
+                    const tengahExtended = (t12.y < t10.y - 0.07) || (Math.abs(t12.x - t10.x) > 0.08);
+
+                    // Jari lain tidak terlalu extended
+                    const otherFingersDown = t16.y > t10.y - 0.05 && t20.y > t10.y - 0.05;
+
+                    if (telunjukExtended && tengahExtended && otherFingersDown) {
                         gayaDuaJari = true;
                         break;
                     }
@@ -208,8 +219,8 @@
 
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "✅ BLUR NYALA (Telunjuk+Tengah)" : 
-                    "⭕ BLUR MATI - Turunkan tangan";
+                    "✅ BLUR NYALA" : 
+                    "⭕ BLUR MATI";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
         }
@@ -243,7 +254,7 @@
             clearInterval(countdownTimer);
             isCounting = false;
             angkaCountdown.classList.add('hidden');
-            statusText.innerText = "TUNJUKKAN TELUNJUK + TENGAH...";
+            statusText.innerText = "ANGKAT TELUNJUK + TENGAH";
             statusText.style.color = "red";
         }
     </script>
