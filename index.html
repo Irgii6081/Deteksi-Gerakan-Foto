@@ -44,7 +44,6 @@
         .camera-topbar { background: black; color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; }
         .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
         
-        /* Perbaikan CSS Kamera agar tidak nge-zoom */
         .video-wrapper { position: relative; width: 100%; height: 500px; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.3s ease; will-change: filter; }
         .blur-aktif { filter: blur(20px); }
@@ -84,10 +83,10 @@
 
             <div class="camera-status">
                 <div class="status-box">STATUS: <span id="status-text" style="color: red;">MENUNGGU GESTUR 2 JARI...</span></div>
-                <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
+                <div>🎵 FOTO KITA BLUR</div>
             </div>
         </div>
-        <div class="footer">MADE WITH ❤️ BY ANDA</div>
+        <div class="footer">MADE WITH ❤️ BY REXZY</div>
     </div>
 
     <audio id="musik" loop preload="auto">
@@ -108,7 +107,6 @@
         let countdownTimer;
 
         async function mulaiAplikasi() {
-            // Trik Unlock Audio: Paksa play lalu pause seketika agar diizinkan browser
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
@@ -118,15 +116,14 @@
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                // Resolusi diturunkan agar super enteng dan tidak ngelag di HP
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 360, height: 480, facingMode: "user" } });
                 videoElement.srcObject = stream;
             } catch (err) { alert("Izinkan kamera ya!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             
-            // AI diringankan ke level 0 agar FPS ngebut, sensitivitas diturunkan agar tangan sepotong terbaca
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4 });
+            // Sensitivitas dinaikkan sedikit ke 0.5 agar tidak salah tangkap bayangan atau benda lain
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
             async function prosesFrame() { await hands.send({image: videoElement}); requestAnimationFrame(prosesFrame); }
@@ -139,21 +136,17 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
                     
-                    // Logika Dipermudah untuk tangan yang di ujung/bawah layar
-                    const ujungTelunjuk = landmarks[8].y;
-                    const ruasTelunjuk = landmarks[6].y;
-                    const ujungTengah = landmarks[12].y;
-                    const ruasTengah = landmarks[10].y;
-                    const ujungManis = landmarks[16].y;
+                    // KUNCI LOGIKA SUPER KETAT:
+                    // 1. Telunjuk dan Tengah harus naik (lebih tinggi dari ruas sebelumnya)
+                    const isTelunjukNaik = landmarks[8].y < landmarks[6].y;
+                    const isTengahNaik = landmarks[12].y < landmarks[10].y;
                     
-                    // Cek apakah telunjuk dan tengah naik melewati ruasnya sendiri
-                    const isTelunjukNaik = ujungTelunjuk < ruasTelunjuk;
-                    const isTengahNaik = ujungTengah < ruasTengah;
+                    // 2. Jari Manis dan Kelingking harus turun/ditekuk (lebih rendah dari ruas sebelumnya)
+                    const isManisTurun = landmarks[16].y > landmarks[14].y;
+                    const isKelingkingTurun = landmarks[20].y > landmarks[18].y;
                     
-                    // Cek apakah jari manis ada di bawah (ditekuk)
-                    const isManisTurun = ujungManis > ujungTengah;
-                    
-                    if (isTelunjukNaik && isTengahNaik && isManisTurun) {
+                    // Semua syarat (4 jari ini) harus terpenuhi bersamaan
+                    if (isTelunjukNaik && isTengahNaik && isManisTurun && isKelingkingTurun) {
                         gayaDuaJari = true; break;
                     }
                 }
@@ -193,7 +186,6 @@
                     isUnlocked = true;
                     isCounting = false;
                     
-                    // Mainkan musik sekarang (pasti berhasil karena sudah di-unlock di awal)
                     audio.play(); 
                     
                     videoElement.classList.add('blur-aktif');
