@@ -93,10 +93,10 @@
             <p>
                 ✌️ <strong>Telunjuk + Tengah</strong> = Mode Foto Blur<br>
                 👃 <strong>Sentuh Hidung</strong> = Mode Kicau Mania<br><br>
-                <em>Bisa ganti mode kapan saja dan support Rame-Rame!</em>
+                <em>Sistem cepat: Tangan dan Hidung terdeteksi instan!</em>
             </p>
             <button onclick="mulaiAplikasi()">START CAMERA</button>
-            <div class="info-text">SECURE SYSTEM • MULTI-FACE & HAND TRACKING</div>
+            <div class="info-text">SECURE SYSTEM • FAST TRACKING</div>
         </div>
     </div>
 
@@ -124,8 +124,8 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-yellow);">LOADING AI MODELS...</span></div>
-                <div class="song-title" id="song-indicator">🎵 Mohon tunggu sebentar...</div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-yellow);">MENYIAPKAN AI... CEPAT!</span></div>
+                <div class="song-title" id="song-indicator">🎵 Tunggu detak jantung mesin...</div>
             </div>
         </div>
     </div>
@@ -160,7 +160,10 @@
         let butuhResetTangan = false; 
         
         let detectedFaces = []; 
-        let isAiReady = false; // Penanda apakah AI sudah selesai loading
+        let isAiReady = false; 
+        
+        // KUNCI PENGAMAN BIAR GAK NGE-HANG
+        let isProcessingFrame = false; 
 
         function handleAudioEnded() {
             resetSystem();
@@ -177,7 +180,6 @@
         }
 
         async function mulaiAplikasi() {
-            // Pancing audio
             audioBlur.play().then(() => audioBlur.pause()).catch(()=>{});
             audioKicau.play().then(() => audioKicau.pause()).catch(()=>{});
 
@@ -185,38 +187,42 @@
             document.getElementById('camera-page').classList.remove('hidden');
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } });
                 videoElement.srcObject = stream;
-            } catch (err) { alert("Kamera perlu diizinkan untuk lanjut!"); return; }
+            } catch (err) { alert("Izinkan kamera dulu ya!"); return; }
 
-            // SETUP AI WAJAH (Sudah diperbaiki)
+            // SETUP AI (Fast Mode)
             const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
-            faceDetection.setOptions({ 
-                modelSelection: 0, // 0 = Jarak Dekat/Kamera Depan (sebelumnya salah ketik)
-                minDetectionConfidence: 0.4 
-            });
-            faceDetection.onResults((results) => { 
-                detectedFaces = results.detections || []; 
-            });
+            faceDetection.setOptions({ modelSelection: 0, minDetectionConfidence: 0.4 });
+            faceDetection.onResults((results) => { detectedFaces = results.detections || []; });
 
-            // SETUP AI TANGAN
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 8, modelComplexity: 0, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4 });
+            hands.setOptions({ maxNumHands: 4, modelComplexity: 0, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4 });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
+                // CEGAH TABRAKAN PROSES (Ini yang bikin cepat & gak crash)
+                if (isProcessingFrame) {
+                    requestAnimationFrame(prosesFrame);
+                    return;
+                }
+
                 if(videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
                     if(canvasElement.width !== videoElement.videoWidth) {
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
                     }
+                    
+                    isProcessingFrame = true; // Kunci aktif
                     try {
-                        // DIPERBAIKI: Dijalankan bergantian (antre) agar tidak crash
-                        await faceDetection.send({image: videoElement});
-                        await hands.send({image: videoElement});
+                        await Promise.all([
+                            faceDetection.send({image: videoElement}),
+                            hands.send({image: videoElement})
+                        ]);
                     } catch(err) {
-                        console.error("AI Loading Error:", err);
+                        console.error("AI Error:", err);
                     }
+                    isProcessingFrame = false; // Kunci lepas
                 }
                 requestAnimationFrame(prosesFrame); 
             }
@@ -224,7 +230,6 @@
         }
 
         function onResults(results) {
-            // Hilangkan tulisan "LOADING AI MODELS..." jika sudah berhasil membaca frame pertama
             if (!isAiReady) {
                 isAiReady = true;
                 updateStatus("AWAITING GESTURE", "var(--neon-red)", "🎵 Menunggu gaya...");
@@ -239,7 +244,7 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const hand of results.multiHandLandmarks) {
                     
-                    // 1. MENGGAMBAR KERANGKA TANGAN (BIRU NEON)
+                    // GAMBAR TANGAN BIRU
                     canvasCtx.strokeStyle = '#00e5ff';
                     canvasCtx.fillStyle = '#00e5ff';
                     canvasCtx.lineWidth = 2.5;
@@ -259,7 +264,7 @@
                         canvasCtx.fill();
                     }
 
-                    // 2. LOGIKA FOTO BLUR (✌️)
+                    // CEK BLUR
                     const telunjukNaik = hand[8].y < hand[6].y;
                     const tengahNaik   = hand[12].y < hand[10].y;
                     const manisTurun = hand[16].y > hand[14].y;
@@ -270,15 +275,13 @@
                         gayaDuaJari = true;
                     }
 
-                    // 3. LOGIKA SCUBA (👃) & VISUALISASI AI
+                    // CEK HIDUNG
                     if (detectedFaces && detectedFaces.length > 0) {
                         for (const face of detectedFaces) {
-                            // Validasi agar tidak error jika wajah tidak terdeteksi utuh
                             if(!face.landmarks || face.landmarks.length < 3) continue;
 
-                            const nose = face.landmarks[2]; // Titik ujung hidung
+                            const nose = face.landmarks[2];
                             
-                            // A. Gambar Titik Hidung (Kuning)
                             canvasCtx.beginPath();
                             canvasCtx.arc(nose.x * canvasElement.width, nose.y * canvasElement.height, 6, 0, 2 * Math.PI);
                             canvasCtx.fillStyle = '#ffea00';
@@ -287,21 +290,18 @@
                             canvasCtx.strokeStyle = '#000'; 
                             canvasCtx.stroke();
                             
-                            // Hitung Jarak Jari ke Hidung
                             const distTelunjuk = Math.sqrt((hand[8].x - nose.x)**2 + (hand[8].y - nose.y)**2);
                             const distJempol = Math.sqrt((hand[4].x - nose.x)**2 + (hand[4].y - nose.y)**2);
                             
-                            // B. Gambar Garis Sensor Jarak AI (Dari Jari ke Hidung)
                             canvasCtx.beginPath();
                             canvasCtx.moveTo(hand[8].x * canvasElement.width, hand[8].y * canvasElement.height);
                             canvasCtx.lineTo(nose.x * canvasElement.width, nose.y * canvasElement.height);
                             
-                            // C. Ubah Warna Garis Berdasarkan Jarak
                             if (distTelunjuk < 0.15 || distJempol < 0.15) {
-                                canvasCtx.strokeStyle = '#39ff14'; // HIJAU = Terdeteksi Sentuh Hidung
+                                canvasCtx.strokeStyle = '#39ff14';
                                 gayaScuba = true;
                             } else {
-                                canvasCtx.strokeStyle = '#ff2a2a'; // MERAH = Masih Jauh
+                                canvasCtx.strokeStyle = '#ff2a2a';
                             }
                             
                             canvasCtx.setLineDash([5, 5]); 
@@ -313,7 +313,6 @@
             }
             canvasCtx.restore();
 
-            // --- SISTEM KONTROL MODE ---
             if (butuhResetTangan) {
                 if (!gayaDuaJari && !gayaScuba) {
                     butuhResetTangan = false;
@@ -334,7 +333,6 @@
                 if (countingMode) resetSystem();
             }
 
-            // --- APLIKASI EFEK VISUAL ---
             if (countingMode === 'blur' || (activeMode === 'blur' && gayaDuaJari)) {
                 videoElement.classList.add('blur-aktif');
                 if (activeMode === 'blur') updateStatus("BLUR ACTIVE", "var(--neon-green)", "🎵 Sal Priadi - Foto Kita Blur");
