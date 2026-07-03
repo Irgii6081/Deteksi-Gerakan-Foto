@@ -107,20 +107,22 @@
         let isUnlocked = false;    
         let isCounting = false;    
         let countdownTimer;
+        
+        // Variabel untuk memastikan user menurunkan tangannya dulu sebelum bisa memicu ulang
         let butuhResetTangan = false; 
 
+        // Logika saat lagu habis berputar
         audio.addEventListener('ended', () => {
             isUnlocked = false;
             isCounting = false;
             butuhResetTangan = true; 
             videoElement.classList.remove('blur-aktif');
-            statusText.innerText = "LAGU HABIS...";
+            statusText.innerText = "LAGU HABIS, TURUNKAN TANGAN!";
             statusText.style.color = "red";
             audio.currentTime = 0; 
         });
 
         async function mulaiAplikasi() {
-            // Memancing audio agar diizinkan play oleh browser
             audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
 
             document.getElementById('landing-page').classList.add('hidden');
@@ -129,15 +131,11 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoElement.srcObject = stream;
-            } catch (err) { 
-                alert("Izinkan kamera untuk menggunakan fitur ini!"); 
-                return; 
-            }
+            } catch (err) { alert("Izinkan kamera!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             
-            // Konfigurasi baru: maxNumHands diubah menjadi 8 agar bisa deteksi rame-rame
-            // Confidence diturunkan sedikit agar lebih fleksibel mendeteksi tangan
+            // maxNumHands: 8 dan confidence diturunkan agar lebih gampang deteksi
             hands.setOptions({ 
                 maxNumHands: 8, 
                 modelComplexity: 0, 
@@ -167,61 +165,54 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Gambar kerangka tangan (opsional, bisa dihapus jika tidak mau ada garis di layar)
-                    canvasCtx.strokeStyle = '#00FF00';
-                    canvasCtx.lineWidth = 4;
-                    canvasCtx.beginPath();
-                    const tulang = [[0,1,2,3,4],[0,5,6,7,8],[0,9,10,11,12],[0,13,14,15,16],[0,17,18,19,20],[5,9,13,17]];
-                    for (let j = 0; j < tulang.length; j++) {
-                        let ruas = tulang[j];
-                        for (let k = 0; k < ruas.length - 1; k++) {
-                            canvasCtx.moveTo(landmarks[ruas[k]].x * canvasElement.width, landmarks[ruas[k]].y * canvasElement.height);
-                            canvasCtx.lineTo(landmarks[ruas[k+1]].x * canvasElement.width, landmarks[ruas[k+1]].y * canvasElement.height);
-                        }
-                    }
-                    canvasCtx.stroke();
-
-                    // Logika jarak dinamis. Membandingkan ujung jari dengan ruas tengahnya sendiri.
-                    // (y lebih kecil berarti posisi lebih di atas pada layar)
+                    // Cek jarak antar sendi tangan agar fleksibel saat jauh/dekat
                     const telunjukNaik = landmarks[8].y < landmarks[6].y;
                     const tengahNaik   = landmarks[12].y < landmarks[10].y;
                     
                     const manisTurun = landmarks[16].y > landmarks[14].y;
                     const kelingkingTurun = landmarks[20].y > landmarks[18].y;
 
-                    // Jempol harus ditekuk atau minimal tidak mengacung (thumbs up) ke atas
                     const jempolTurun = landmarks[4].y > landmarks[5].y - 0.03; 
 
-                    // Jika telunjuk & tengah naik, dan jari lainnya turun
                     if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
                         gayaDuaJari = true;
-                        break; // Cukup 1 orang yang bergaya, langsung trigger untuk semuanya
+                        break; 
                     }
                 }
             }
 
             canvasCtx.restore();
 
+            // Jika lagu baru saja habis, paksa user menurunkan tangan (menghilangkan gestur)
+            // agar hitung mundur tidak otomatis mengulang secara tidak sengaja.
             if (butuhResetTangan) {
-                if (!gayaDuaJari) butuhResetTangan = false;
+                if (!gayaDuaJari) {
+                    butuhResetTangan = false;
+                    statusText.innerText = "TELUNJUK + TENGAH SAJA";
+                }
                 return;
             }
 
+            // Memulai Hitung Mundur
             if (gayaDuaJari && !isUnlocked && !isCounting) {
                 mulaiHitungMundur();
-            } else if (!gayaDuaJari && isCounting) {
+            } 
+            // Membatalkan Hitung Mundur jika tangan diturunkan sebelum 3 detik
+            else if (!gayaDuaJari && isCounting) {
                 batalkanHitungMundur();
             }
 
+            // Aktifkan blur jika sedang menghitung ATAU lagu sudah jalan dan tangan masih gaya
             if (isCounting || (isUnlocked && gayaDuaJari)) {
                 videoElement.classList.add('blur-aktif');
             } else {
                 videoElement.classList.remove('blur-aktif');
             }
 
+            // Update Text Status
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "✅ BLUR NYALA" : 
+                    "✅ BLUR NYALA / AUDIO PLAY" : 
                     "⭕ BLUR MATI";
                 statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
             }
@@ -246,7 +237,7 @@
                     isUnlocked = true;
                     isCounting = false;
                     audio.play();
-                    statusText.innerText = "AUDIO PLAY";
+                    statusText.innerText = "✅ BLUR NYALA / AUDIO PLAY";
                     statusText.style.color = "#4ade80";
                 }
             }, 1000);
