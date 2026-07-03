@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Super Cam - Blur & Kicau.</title>
+    <title>AI Super Cam - Blur & Kicau</title>
     <style>
         :root {
             --bg-grad-1: #0f2027; --bg-grad-2: #203a43; --bg-grad-3: #2c5364;
@@ -30,21 +30,25 @@
         button { 
             width: 100%; background: linear-gradient(90deg, var(--neon-blue), #007bb5);
             color: white; border: none; border-radius: 12px; padding: 16px; 
-            font-size: 16px; font-weight: bold; cursor: pointer;
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
+        button:hover { transform: scale(1.02); }
         .hidden { display: none !important; }
         .video-wrapper { 
             position: relative; width: 100%; aspect-ratio: 3/4; background: #000; 
-            border-radius: 16px; overflow: hidden; 
+            border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         #webcam, #output_canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; transform: scale(1.25) scaleX(-1);
         }
+        #webcam { z-index: 1; }
         #output_canvas { z-index: 5; pointer-events: none; }
+        
         #angka-countdown { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 100px; font-weight: 900; color: white; z-index: 10; text-shadow: 0 0 20px #000;
+            font-size: 120px; font-weight: 900; color: white; z-index: 10; 
+            text-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 10px var(--neon-yellow);
         }
         #gif-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; }
         .kicau-gif {
@@ -60,9 +64,9 @@
     <div id="landing-page" class="container">
         <div class="card">
             <div class="header-title"><h1>AI SUPER CAM</h1></div>
-            <p>
-                ✌️ <strong>Telunjuk + Tengah</strong> = Mode Blur<br>
-                👋 <strong>Telapak Terbuka + Sentuh Hidung</strong> = Kicau Mania
+            <p style="line-height: 1.6;">
+                ✌️ <strong>Telunjuk + Tengah</strong><br><span style="color:var(--neon-blue); font-size:12px;">Mode Foto Blur</span><br><br>
+                👋 <strong>Telapak Terbuka + Sentuh Hidung</strong><br><span style="color:var(--neon-green); font-size:12px;">Mode Kicau Mania</span>
             </p>
             <button onclick="mulaiAplikasi()">START CAMERA</button>
         </div>
@@ -87,7 +91,7 @@
 
             <div class="camera-status">
                 <div id="status-text" style="color: var(--neon-yellow); font-weight: bold;">MENYIAPKAN AI...</div>
-                <div id="song-indicator" style="margin-top: 5px;">🎵 Menunggu gesture...</div>
+                <div id="song-indicator" style="margin-top: 5px;">Mohon tunggu sebentar...</div>
             </div>
         </div>
     </div>
@@ -95,9 +99,9 @@
     <audio id="musik-blur" preload="auto"><source src="lagufotoblur.mp3" type="audio/mpeg"></audio>
     <audio id="musik-kicau" preload="auto"><source src="kicaumania.mp3" type="audio/mpeg"></audio>
 
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4/face_detection.js"></script>
 
     <script>
         const videoElement = document.getElementById('webcam');
@@ -111,11 +115,11 @@
         const audioBlur = document.getElementById('musik-blur');
         const audioKicau = document.getElementById('musik-kicau');
 
-        let activeMode = null;
+        let activeMode = null; // Blur atau Kicau
         let countingMode = null;
-        let countdownTimer;
+        let holdStartTime = 0;
         let gifTimer;
-        let butuhResetTangan = false;
+        
         let detectedFaces = [];
         let isAiReady = false;
 
@@ -128,17 +132,21 @@
         async function mulaiAplikasi() {
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
+            updateStatus("MEMUAT MODEL AI...", "#ffea00", "Beri izin kamera jika diminta");
 
-            updateStatus("MEMUAT MODEL AI...", "#ffea00");
-
-            const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
+            // Setup Face Detection
+            const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4/${file}`});
             faceDetection.setOptions({ modelSelection: 0, minDetectionConfidence: 0.5 });
-            faceDetection.onResults((results) => { detectedFaces = results.detections || []; });
+            faceDetection.onResults((results) => { 
+                detectedFaces = results.detections || []; 
+            });
 
-            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-            hands.onResults(onResults);
+            // Setup Hand Tracking
+            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`});
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.5 });
+            hands.onResults(onResultsHands);
 
+            // Kamera Berjalan
             const camera = new Camera(videoElement, {
                 onFrame: async () => {
                     if (videoElement.videoWidth === 0) return;
@@ -146,24 +154,26 @@
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
                     }
-                    await faceDetection.send({image: videoElement});
-                    await hands.send({image: videoElement});
+                    
+                    // Eksekusi bersamaan (Promise.all) agar framerate tidak drop dan garis bisa ditarik
+                    await Promise.all([
+                        faceDetection.send({image: videoElement}),
+                        hands.send({image: videoElement})
+                    ]);
                 },
-                width: 640,
-                height: 480,
-                facingMode: "user"
+                width: 640, height: 480, facingMode: "user"
             });
 
             camera.start().catch(err => {
-                updateStatus("GAGAL MENGAKSES KAMERA", "#ff2a2a");
+                updateStatus("GAGAL MENGAKSES KAMERA", "#ff2a2a", "Pastikan izin diberikan");
                 console.error(err);
             });
         }
 
-        function onResults(results) {
+        function onResultsHands(results) {
             if (!isAiReady) {
                 isAiReady = true;
-                updateStatus("AWAITING GESTURE", "#ff2a2a", "🎵 Siap menerima gesture");
+                updateStatus("AI READY", "#39ff14", "🎵 Tunjukkan Gesture Anda");
             }
 
             canvasCtx.save();
@@ -174,7 +184,8 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Gambar rangka tangan
+                    
+                    // 1. Gambar rangka tangan (Visual)
                     canvasCtx.strokeStyle = '#00e5ff';
                     canvasCtx.lineWidth = 4;
                     const fingers = [[0,1,2,3,4],[0,5,6,7,8],[0,9,10,11,12],[0,13,14,15,16],[0,17,18,19,20]];
@@ -189,7 +200,6 @@
                     }
                     canvasCtx.stroke();
 
-                    // Titik sendi
                     canvasCtx.fillStyle = '#ffea00';
                     landmarks.forEach(p => {
                         canvasCtx.beginPath();
@@ -197,35 +207,43 @@
                         canvasCtx.fill();
                     });
 
-                    // Gesture Blur
-                    if (landmarks[8].y < landmarks[6].y - 0.05 && landmarks[12].y < landmarks[10].y - 0.05) {
+                    // 2. Logika Deteksi Jari yang Presisi
+                    const isIndexUp = landmarks[8].y < landmarks[6].y;
+                    const isMiddleUp = landmarks[12].y < landmarks[10].y;
+                    const isRingUp = landmarks[16].y < landmarks[14].y;
+                    const isPinkyUp = landmarks[20].y < landmarks[18].y;
+
+                    // Telapak tangan terbuka (semua jari utama naik)
+                    const palmOpen = isIndexUp && isMiddleUp && isRingUp && isPinkyUp;
+                    
+                    // Pose Peace (Telunjuk & Tengah naik, Sisanya turun)
+                    if (isIndexUp && isMiddleUp && !isRingUp && !isPinkyUp) {
                         gayaDuaJari = true;
                     }
 
-                    // Gesture Kicau + Garis Jarak
-                    if (detectedFaces.length > 0) {
-                        const nose = detectedFaces[0].landmarks[2];
+                    // 3. Deteksi Jarak Jari ke Hidung
+                    if (detectedFaces.length > 0 && detectedFaces[0].landmarks) {
+                        const nose = detectedFaces[0].landmarks[2]; // Index 2 = Ujung Hidung
                         let isCloseToNose = false;
 
                         const tips = [4,8,12,16,20];
                         tips.forEach(idx => {
                             const tip = landmarks[idx];
                             const dist = Math.hypot(tip.x - nose.x, tip.y - nose.y);
-                            if (dist < 0.11) isCloseToNose = true;
+                            
+                            // Jarak toleransi ke hidung
+                            if (dist < 0.15) isCloseToNose = true;
 
-                            canvasCtx.strokeStyle = dist < 0.11 ? '#39ff14' : '#ff2a2a';
+                            // Tarik Garis Visual Jarak
+                            canvasCtx.strokeStyle = dist < 0.15 ? '#39ff14' : '#ff2a2a';
                             canvasCtx.lineWidth = 3;
-                            canvasCtx.setLineDash([4,4]);
+                            canvasCtx.setLineDash([5, 5]);
                             canvasCtx.beginPath();
-                            canvasCtx.moveTo(tip.x*canvasElement.width, tip.y*canvasElement.height);
-                            canvasCtx.lineTo(nose.x*canvasElement.width, nose.y*canvasElement.height);
+                            canvasCtx.moveTo(tip.x * canvasElement.width, tip.y * canvasElement.height);
+                            canvasCtx.lineTo(nose.x * canvasElement.width, nose.y * canvasElement.height);
                             canvasCtx.stroke();
                         });
-                        canvasCtx.setLineDash([]);
-
-                        const palmOpen = landmarks[8].y < landmarks[6].y && 
-                                        landmarks[12].y < landmarks[10].y && 
-                                        landmarks[16].y < landmarks[14].y;
+                        canvasCtx.setLineDash([]); // Reset garis putus-putus
 
                         if (palmOpen && isCloseToNose) gayaScuba = true;
                     }
@@ -233,42 +251,54 @@
             }
             canvasCtx.restore();
 
-            // Logika mode
+            // 4. Manajer Logika Countdown (Akan berhenti otomatis jika user merubah gesture)
+            if (activeMode) return; // Jika lagu sedang main, tahan semua tracking
+
             if (gayaScuba) {
-                if (activeMode !== 'kicau' && !countingMode) mulaiHitungMundur('kicau');
+                jalankanHitungMundur('kicau');
             } else if (gayaDuaJari) {
-                if (activeMode !== 'blur' && !countingMode) mulaiHitungMundur('blur');
+                jalankanHitungMundur('blur');
+            } else {
+                batalkanHitungMundur();
             }
         }
 
-        function mulaiHitungMundur(targetMode) {
-            countingMode = targetMode;
-            let waktu = 3;
-            angkaCountdown.textContent = waktu;
-            angkaCountdown.classList.remove('hidden');
-            updateStatus(`HOLD... ${waktu}`, "#ffca3a");
+        function jalankanHitungMundur(targetMode) {
+            if (countingMode !== targetMode) {
+                countingMode = targetMode;
+                holdStartTime = Date.now();
+                angkaCountdown.classList.remove('hidden');
+            }
 
-            countdownTimer = setInterval(() => {
-                waktu--;
-                if (waktu > 0) {
-                    angkaCountdown.textContent = waktu;
-                    updateStatus(`HOLD... ${waktu}`, "#ffca3a");
+            // Menghitung sisa detik (3 detik)
+            const terlewati = Date.now() - holdStartTime;
+            const sisaWaktu = Math.ceil((3000 - terlewati) / 1000);
+
+            if (sisaWaktu > 0) {
+                angkaCountdown.textContent = sisaWaktu;
+                updateStatus(`TAHAN GESTURE... ${sisaWaktu}`, "#ffca3a");
+            } else {
+                // Eksekusi jika berhasil ditahan 3 detik
+                activeMode = targetMode;
+                batalkanHitungMundur(); 
+                
+                if (targetMode === 'blur') {
+                    audioBlur.play();
+                    updateStatus("📸 MODE FOTO BLUR AKTIF", "#39ff14", "🎵 Sal Priadi - Foto Kita Blur");
                 } else {
-                    clearInterval(countdownTimer);
-                    angkaCountdown.classList.add('hidden');
-                    activeMode = targetMode;
-                    countingMode = null;
-
-                    if (targetMode === 'blur') {
-                        audioBlur.play();
-                        updateStatus("BLUR ACTIVE", "#39ff14", "🎵 Sal Priadi - Foto Kita Blur");
-                    } else {
-                        audioKicau.play();
-                        startGifs();
-                        updateStatus("KICAU MANIA ACTIVE", "#00e5ff", "🎵 Kicau Mania");
-                    }
+                    audioKicau.play();
+                    startGifs();
+                    updateStatus("🐦 KICAU MANIA AKTIF", "#00e5ff", "🎵 Kicau Mania");
                 }
-            }, 1000);
+            }
+        }
+
+        function batalkanHitungMundur() {
+            if (countingMode) {
+                countingMode = null;
+                angkaCountdown.classList.add('hidden');
+                updateStatus("AI READY", "#39ff14", "🎵 Tunjukkan Gesture Anda");
+            }
         }
 
         function startGifs() {
@@ -283,16 +313,18 @@
         }
 
         function resetSystem() {
-            clearInterval(countdownTimer);
             clearInterval(gifTimer);
             activeMode = null;
-            countingMode = null;
+            batalkanHitungMundur();
+            
             audioBlur.pause(); audioBlur.currentTime = 0;
             audioKicau.pause(); audioKicau.currentTime = 0;
-            angkaCountdown.classList.add('hidden');
             gifContainer.classList.add('hidden');
+            
+            updateStatus("AI READY", "#39ff14", "🎵 Tunjukkan Gesture Anda");
         }
 
+        // Reset system saat audio selesai
         audioBlur.addEventListener('ended', resetSystem);
         audioKicau.addEventListener('ended', resetSystem);
     </script>
