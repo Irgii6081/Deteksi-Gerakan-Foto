@@ -3,77 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foto Kita Blur .</title>
+    <title>Foto Kita Blur - Modern UI</title>
     <style>
         :root {
-            --bg-pink: #ff529a;
-            --btn-green: #4ade80;
-            --box-cyan: #06b6d4;
-            --border-black: 3px solid black;
-            --shadow-black: 6px 6px 0px black;
+            --bg-grad-1: #0f2027;
+            --bg-grad-2: #203a43;
+            --bg-grad-3: #2c5364;
+            --neon-blue: #00e5ff;
+            --neon-green: #39ff14;
+            --neon-red: #ff2a2a;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-pink);
-            background-image: radial-gradient(#cc3574 2px, transparent 2px); background-size: 20px 20px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; padding: 20px; box-sizing: border-box;
+            margin: 0; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3));
+            color: white;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            min-height: 100vh; 
+            padding: 20px; 
+            box-sizing: border-box;
         }
 
-        .container { width: 100%; max-width: 420px; position: relative; }
-        .card { background: white; border: var(--border-black); box-shadow: var(--shadow-black); padding: 25px; margin-bottom: 20px; position: relative; }
+        .container { 
+            width: 100%; 
+            max-width: 400px; 
+            position: relative; 
+        }
+
+        .card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); 
+            border-radius: 24px; 
+            padding: 30px; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            text-align: center;
+        }
         
-        .top-badge { background: var(--btn-green); border: var(--border-black); padding: 5px 15px; font-weight: bold; font-size: 12px; position: absolute; top: -15px; left: 20px; z-index: 10; }
-        .header-title { display: flex; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; }
-        .icon-box { background: var(--box-cyan); border: var(--border-black); width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 4px 4px 0px black; }
-        h1 { margin: 0; font-size: 26px; line-height: 1.1; text-transform: uppercase; }
-        p { font-family: monospace; font-size: 14px; margin-bottom: 20px; }
-        hr { border: 0; border-top: 3px solid black; margin: 20px 0; }
-        .dashed-line { border-top: 1px dashed black; }
+        .header-title h1 { 
+            margin: 0; 
+            font-size: 28px; 
+            font-weight: 800;
+            background: -webkit-linear-gradient(0deg, var(--neon-blue), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
 
-        button { width: 100%; background: var(--btn-green); color: black; border: var(--border-black); box-shadow: var(--shadow-black); padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.1s; }
-        button:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0px black; }
+        p { 
+            font-size: 14px; 
+            color: #d1d5db; 
+            line-height: 1.5; 
+            margin-bottom: 25px; 
+        }
 
-        .info-text { font-family: monospace; font-size: 12px; margin-top: 15px; }
-        .info-text div { margin-bottom: 8px; }
-        .footer { background: white; border: var(--border-black); padding: 15px; text-align: center; font-weight: bold; font-size: 12px; width: 100%; box-sizing: border-box; }
+        button { 
+            width: 100%; 
+            background: linear-gradient(90deg, var(--neon-blue), #007bb5);
+            color: white; 
+            border: none; 
+            border-radius: 12px;
+            padding: 16px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            letter-spacing: 1px;
+            cursor: pointer; 
+            transition: transform 0.2s, box-shadow 0.2s; 
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 229, 255, 0.5);
+        }
+        
+        button:active { 
+            transform: translateY(2px); 
+        }
+
+        .info-text { 
+            font-size: 11px; 
+            color: #9ca3af; 
+            margin-top: 20px; 
+            letter-spacing: 0.5px;
+        }
 
         .hidden { display: none !important; }
 
-        .camera-card { padding: 0; overflow: hidden; }
-        .camera-topbar { background: black; color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-size: 12px; }
-        .badge-scan { background: yellow; color: black; padding: 3px 8px; font-weight: bold; }
-        
-        .video-wrapper { position: relative; width: 100%; height: auto; background: #222; display: flex; justify-content: center; align-items: center; overflow: hidden; border-bottom: 2px solid black; border-top: 2px solid black; }
-        
-        #webcam { display: block; width: 100%; height: auto; transform: scaleX(-1); transition: filter 0.25s ease; }
-        .blur-aktif { filter: blur(22px); }
+        .camera-card { 
+            padding: 15px; 
+        }
 
-        #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
+        .camera-topbar { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 12px; 
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #9ca3af;
+        }
+
+        .badge-scan { 
+            color: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
         
-        #angka-countdown { position: absolute; font-size: 90px; color: white; font-weight: bold; text-shadow: 4px 4px 0px black, -2px -2px 0px black; z-index: 10; }
-        .camera-status { padding: 15px; font-family: monospace; font-size: 12px; }
-        .status-box { border: 1px dashed black; padding: 10px; margin-bottom: 10px; font-weight: bold; }
+        .badge-scan::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--neon-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--neon-blue);
+        }
+        
+        .video-wrapper { 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 3/4; /* Proporsi kamera vertikal */
+            background: #000; 
+            border-radius: 16px;
+            overflow: hidden; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        
+        /* EFEK ZOOM & MIRROR: scale(1.25) membuat gambar lebih nge-zoom */
+        #webcam, #output_canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transform: scale(1.25) scaleX(-1);
+        }
+        
+        #webcam { transition: filter 0.25s ease; }
+        .blur-aktif { filter: blur(20px); }
+
+        #output_canvas { z-index: 5; pointer-events: none; }
+        
+        #angka-countdown { 
+            position: absolute; 
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px; 
+            color: white; 
+            font-weight: 900; 
+            text-shadow: 0 0 20px rgba(0,0,0,0.8); 
+            z-index: 10; 
+        }
+
+        .camera-status { 
+            margin-top: 15px;
+            padding: 15px; 
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            font-size: 13px; 
+            text-align: center;
+        }
+
+        .status-box { 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            letter-spacing: 1px;
+        }
+        
+        .song-title {
+            color: #d1d5db;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
 
     <div id="landing-page" class="container">
-        <div class="top-badge">TREND 2026 // SAL PRIADI</div>
         <div class="card">
-            <div class="header-title"><div class="icon-box">📷</div><h1>Foto Kita<br>Blur</h1></div>
-            <p>Hanya <strong>Telunjuk + Tengah</strong>.<br>Jempol naik atau tangan dikepal = blur mati.</p>
-            <hr>
-            <button onclick="mulaiAplikasi()">MULAI KAMERA</button>
-            <hr class="dashed-line">
-            <div class="info-text"><div>🔒 PRIVASI AMAN • DETEKSI KETAT</div></div>
+            <div class="header-title">
+                <h1>FOTO KITA BLUR</h1>
+            </div>
+            <p>Hanya gunakan <strong>Telunjuk + Tengah</strong> (✌️).<br>Bisa dipakai beramai-ramai.<br>Jempol naik = blur mati.</p>
+            <button onclick="mulaiAplikasi()">START CAMERA</button>
+            <div class="info-text">SECURE SYSTEM • MULTI-HAND TRACKING</div>
         </div>
-        <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
     <div id="camera-page" class="container hidden">
         <div class="card camera-card">
-            <div class="camera-topbar"><span class="badge-scan">🔍 LIVE</span><span>• VIEWFINDER</span><span>🔊</span></div>
+            <div class="camera-topbar">
+                <span class="badge-scan">LIVE TRACKING</span>
+                <span>AI CAMERA</span>
+            </div>
             
             <div class="video-wrapper">
                 <video id="webcam" autoplay playsinline></video>
@@ -82,11 +214,10 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: red;">TELUNJUK + TENGAH SAJA</span></div>
-                <div>🎵 SAL PRIADI - FOTO KITA BLUR</div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-red);">AWAITING GESTURE</span></div>
+                <div class="song-title">🎵 Sal Priadi - Foto Kita Blur</div>
             </div>
         </div>
-        <div class="footer">MADE WITH ❤️ BY ANDA</div>
     </div>
 
     <audio id="musik" preload="auto">
@@ -107,18 +238,15 @@
         let isUnlocked = false;    
         let isCounting = false;    
         let countdownTimer;
-        
-        // Variabel untuk memastikan user menurunkan tangannya dulu sebelum bisa memicu ulang
         let butuhResetTangan = false; 
 
-        // Logika saat lagu habis berputar
         audio.addEventListener('ended', () => {
             isUnlocked = false;
             isCounting = false;
             butuhResetTangan = true; 
             videoElement.classList.remove('blur-aktif');
             statusText.innerText = "LAGU HABIS, TURUNKAN TANGAN!";
-            statusText.style.color = "red";
+            statusText.style.color = "var(--neon-red)";
             audio.currentTime = 0; 
         });
 
@@ -131,13 +259,12 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoElement.srcObject = stream;
-            } catch (err) { alert("Izinkan kamera!"); return; }
+            } catch (err) { alert("Kamera perlu diizinkan untuk lanjut!"); return; }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             
-            // maxNumHands: 8 dan confidence diturunkan agar lebih gampang deteksi
             hands.setOptions({ 
-                maxNumHands: 8, 
+                maxNumHands: 8, // Mendukung hingga 8 tangan
                 modelComplexity: 0, 
                 minDetectionConfidence: 0.4, 
                 minTrackingConfidence: 0.4 
@@ -165,56 +292,74 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Cek jarak antar sendi tangan agar fleksibel saat jauh/dekat
+                    
+                    // --- MENGGAMBAR GARIS JARI ---
+                    // Menggunakan warna neon cyan agar nyambung dengan tema
+                    canvasCtx.strokeStyle = '#00e5ff';
+                    canvasCtx.fillStyle = '#00e5ff';
+                    canvasCtx.lineWidth = 2.5;
+                    
+                    const tulang = [[0,1,2,3,4],[0,5,6,7,8],[0,9,10,11,12],[0,13,14,15,16],[0,17,18,19,20],[5,9,13,17]];
+                    
+                    canvasCtx.beginPath();
+                    for (let j = 0; j < tulang.length; j++) {
+                        let ruas = tulang[j];
+                        for (let k = 0; k < ruas.length - 1; k++) {
+                            canvasCtx.moveTo(landmarks[ruas[k]].x * canvasElement.width, landmarks[ruas[k]].y * canvasElement.height);
+                            canvasCtx.lineTo(landmarks[ruas[k+1]].x * canvasElement.width, landmarks[ruas[k+1]].y * canvasElement.height);
+                        }
+                    }
+                    canvasCtx.stroke();
+                    
+                    // Gambar titik-titik sendi
+                    for (let i = 0; i < landmarks.length; i++) {
+                        canvasCtx.beginPath();
+                        canvasCtx.arc(landmarks[i].x * canvasElement.width, landmarks[i].y * canvasElement.height, 3, 0, 2 * Math.PI);
+                        canvasCtx.fill();
+                    }
+                    // -----------------------------
+
+                    // Logika Fleksibel (Dekat/Jauh)
                     const telunjukNaik = landmarks[8].y < landmarks[6].y;
                     const tengahNaik   = landmarks[12].y < landmarks[10].y;
-                    
                     const manisTurun = landmarks[16].y > landmarks[14].y;
                     const kelingkingTurun = landmarks[20].y > landmarks[18].y;
-
                     const jempolTurun = landmarks[4].y > landmarks[5].y - 0.03; 
 
                     if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
                         gayaDuaJari = true;
-                        break; 
                     }
                 }
             }
 
             canvasCtx.restore();
 
-            // Jika lagu baru saja habis, paksa user menurunkan tangan (menghilangkan gestur)
-            // agar hitung mundur tidak otomatis mengulang secara tidak sengaja.
             if (butuhResetTangan) {
                 if (!gayaDuaJari) {
                     butuhResetTangan = false;
-                    statusText.innerText = "TELUNJUK + TENGAH SAJA";
+                    statusText.innerText = "AWAITING GESTURE";
+                    statusText.style.color = "var(--neon-red)";
                 }
                 return;
             }
 
-            // Memulai Hitung Mundur
             if (gayaDuaJari && !isUnlocked && !isCounting) {
                 mulaiHitungMundur();
-            } 
-            // Membatalkan Hitung Mundur jika tangan diturunkan sebelum 3 detik
-            else if (!gayaDuaJari && isCounting) {
+            } else if (!gayaDuaJari && isCounting) {
                 batalkanHitungMundur();
             }
 
-            // Aktifkan blur jika sedang menghitung ATAU lagu sudah jalan dan tangan masih gaya
             if (isCounting || (isUnlocked && gayaDuaJari)) {
                 videoElement.classList.add('blur-aktif');
             } else {
                 videoElement.classList.remove('blur-aktif');
             }
 
-            // Update Text Status
             if (isUnlocked) {
                 statusText.innerText = gayaDuaJari ? 
-                    "✅ BLUR NYALA / AUDIO PLAY" : 
-                    "⭕ BLUR MATI";
-                statusText.style.color = gayaDuaJari ? "#4ade80" : "#ffca3a";
+                    "EFFECT ACTIVE & PLAYING" : 
+                    "BLUR DISABLED";
+                statusText.style.color = gayaDuaJari ? "var(--neon-green)" : "#ffca3a";
             }
         }
 
@@ -223,22 +368,22 @@
             let waktu = 3;
             angkaCountdown.innerText = waktu;
             angkaCountdown.classList.remove('hidden');
-            statusText.innerText = "TAHAN GESTUR... " + waktu;
+            statusText.innerText = "HOLD GESTURE... " + waktu;
             statusText.style.color = "#ffca3a";
 
             countdownTimer = setInterval(() => {
                 waktu--;
                 if (waktu > 0) {
                     angkaCountdown.innerText = waktu;
-                    statusText.innerText = "TAHAN GESTUR... " + waktu;
+                    statusText.innerText = "HOLD GESTURE... " + waktu;
                 } else {
                     clearInterval(countdownTimer);
                     angkaCountdown.classList.add('hidden');
                     isUnlocked = true;
                     isCounting = false;
                     audio.play();
-                    statusText.innerText = "✅ BLUR NYALA / AUDIO PLAY";
-                    statusText.style.color = "#4ade80";
+                    statusText.innerText = "EFFECT ACTIVE & PLAYING";
+                    statusText.style.color = "var(--neon-green)";
                 }
             }, 1000);
         }
@@ -247,8 +392,8 @@
             clearInterval(countdownTimer);
             isCounting = false;
             angkaCountdown.classList.add('hidden');
-            statusText.innerText = "TELUNJUK + TENGAH SAJA";
-            statusText.style.color = "red";
+            statusText.innerText = "AWAITING GESTURE";
+            statusText.style.color = "var(--neon-red)";
         }
     </script>
 </body>
