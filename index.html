@@ -8,6 +8,7 @@
         :root {
             --bg-grad-1: #0f2027; --bg-grad-2: #203a43; --bg-grad-3: #2c5364;
             --neon-blue: #00e5ff; --neon-green: #39ff14; --neon-red: #ff2a2a; --neon-yellow: #ffea00;
+            --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1);
         }
         body {
             margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
@@ -17,9 +18,14 @@
         }
         .container { width: 100%; max-width: 400px; position: relative; }
         .card { 
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; 
-            padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); text-align: center;
+            background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); border-radius: 24px; padding: 25px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.37); text-align: center;
+        }
+        .header-title h1 { 
+            margin: 0; font-size: 26px; font-weight: 900;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         button { 
             width: 100%; background: linear-gradient(90deg, var(--neon-blue), #007bb5);
@@ -27,18 +33,37 @@
             font-size: 16px; font-weight: bold; cursor: pointer;
         }
         .hidden { display: none !important; }
-        .video-wrapper { position: relative; width: 100%; aspect-ratio: 3/4; background: #000; border-radius: 16px; overflow: hidden; }
-        #webcam, #output_canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.25) scaleX(-1); }
+        .video-wrapper { 
+            position: relative; width: 100%; aspect-ratio: 3/4; background: #000; 
+            border-radius: 16px; overflow: hidden; 
+        }
+        #webcam, #output_canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; transform: scale(1.25) scaleX(-1);
+        }
         #output_canvas { z-index: 5; pointer-events: none; }
-        #angka-countdown { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; font-weight: 900; z-index: 10; text-shadow: 0 0 20px #000; }
+        #angka-countdown { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 100px; font-weight: 900; color: white; z-index: 10; text-shadow: 0 0 20px #000;
+        }
+        #gif-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; }
+        .kicau-gif {
+            position: absolute; width: 75px; opacity: 0; transform: scale(0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .kicau-gif.show { opacity: 1; transform: scale(1) scaleX(-1); }
+        .camera-status { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 12px; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div id="landing-page" class="container">
         <div class="card">
-            <h1 style="background: linear-gradient(90deg,#00e5ff,#39ff14);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI SUPER CAM</h1>
-            <p>✌️ Dua Jari = Blur<br>👋 Telapak Terbuka + Sentuh Hidung = Kicau Mania</p>
+            <div class="header-title"><h1>AI SUPER CAM</h1></div>
+            <p>
+                ✌️ <strong>Telunjuk + Tengah</strong> = Mode Blur<br>
+                👋 <strong>Telapak Terbuka + Sentuh Hidung</strong> = Kicau Mania
+            </p>
             <button onclick="mulaiAplikasi()">START CAMERA</button>
         </div>
     </div>
@@ -48,12 +73,21 @@
             <div class="video-wrapper">
                 <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="output_canvas"></canvas>
-                <div id="gif-container" class="hidden"></div>
+                
+                <div id="gif-container" class="hidden">
+                    <img src="1000027759.gif" class="kicau-gif" style="top: 8%; left: 5%;">
+                    <img src="1000027759.gif" class="kicau-gif" style="top: 12%; right: 5%;">
+                    <img src="1000027759.gif" class="kicau-gif" style="top: 40%; left: 2%;">
+                    <img src="1000027759.gif" class="kicau-gif" style="top: 40%; right: 2%;">
+                    <img src="1000027759.gif" class="kicau-gif" style="bottom: 15%; left: 10%;">
+                    <img src="1000027759.gif" class="kicau-gif" style="bottom: 15%; right: 10%;">
+                </div>
                 <div id="angka-countdown" class="hidden">3</div>
             </div>
-            <div style="margin-top:15px; padding:15px; background:rgba(0,0,0,0.4); border-radius:12px; text-align:center;">
-                <div id="status-text" style="color:#ffea00; font-weight:bold;">MENYIAPKAN AI...</div>
-                <div id="song-indicator" style="font-size:13px; margin-top:5px;">Mohon tunggu...</div>
+
+            <div class="camera-status">
+                <div id="status-text" style="color: var(--neon-yellow); font-weight: bold;">MENYIAPKAN AI...</div>
+                <div id="song-indicator" style="margin-top: 5px;">🎵 Menunggu gesture...</div>
             </div>
         </div>
     </div>
@@ -66,126 +100,201 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
 
     <script>
-        let isAiReady = false;
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const gifContainer = document.getElementById('gif-container');
+        const statusText = document.getElementById('status-text');
+        const songIndicator = document.getElementById('song-indicator');
+        const angkaCountdown = document.getElementById('angka-countdown');
+
+        const audioBlur = document.getElementById('musik-blur');
+        const audioKicau = document.getElementById('musik-kicau');
+
         let activeMode = null;
         let countingMode = null;
+        let countdownTimer;
+        let gifTimer;
+        let butuhResetTangan = false;
+        let detectedFaces = [];
+        let isAiReady = false;
 
-        const video = document.getElementById('webcam');
-        const canvas = document.getElementById('output_canvas');
-        const ctx = canvas.getContext('2d');
-        const statusText = document.getElementById('status-text');
+        function updateStatus(text, color, song = "") {
+            statusText.textContent = text;
+            statusText.style.color = color;
+            if (song) songIndicator.textContent = song;
+        }
 
         async function mulaiAplikasi() {
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
 
-            statusText.textContent = "LOADING MODEL...";
+            updateStatus("MEMUAT MODEL AI...", "#ffea00");
 
-            const faceDetection = new FaceDetection({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${f}`});
-            faceDetection.setOptions({minDetectionConfidence: 0.5});
+            const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
+            faceDetection.setOptions({ modelSelection: 0, minDetectionConfidence: 0.5 });
+            faceDetection.onResults((results) => { detectedFaces = results.detections || []; });
 
-            const hands = new Hands({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-            hands.setOptions({maxNumHands: 2, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
-
+            const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
 
-            const camera = new Camera(video, {
+            const camera = new Camera(videoElement, {
                 onFrame: async () => {
-                    if (canvas.width !== video.videoWidth) {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
+                    if (videoElement.videoWidth === 0) return;
+                    if (canvasElement.width !== videoElement.videoWidth) {
+                        canvasElement.width = videoElement.videoWidth;
+                        canvasElement.height = videoElement.videoHeight;
                     }
-                    await faceDetection.send({image: video});
-                    await hands.send({image: video});
+                    await faceDetection.send({image: videoElement});
+                    await hands.send({image: videoElement});
                 },
-                width: 640, height: 480, facingMode: "user"
+                width: 640,
+                height: 480,
+                facingMode: "user"
             });
 
-            try {
-                await camera.start();
-                statusText.textContent = "AI SIAP - TUNJUKKAN GESTURE";
-                statusText.style.color = "#39ff14";
-            } catch (e) {
-                statusText.textContent = "GAGAL MENGAKSES KAMERA";
-                statusText.style.color = "red";
-                console.error(e);
-            }
+            camera.start().catch(err => {
+                updateStatus("GAGAL MENGAKSES KAMERA", "#ff2a2a");
+                console.error(err);
+            });
         }
 
         function onResults(results) {
             if (!isAiReady) {
                 isAiReady = true;
-                console.log("✅ MediaPipe Ready");
+                updateStatus("AWAITING GESTURE", "#ff2a2a", "🎵 Siap menerima gesture");
             }
 
-            ctx.save();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-            let gayaBlur = false;
-            let gayaKicau = false;
+            let gayaDuaJari = false;
+            let gayaScuba = false;
 
-            if (results.multiHandLandmarks) {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
-                    // Draw hand
-                    ctx.strokeStyle = '#00e5ff';
-                    ctx.lineWidth = 4;
+                    // Gambar rangka tangan
+                    canvasCtx.strokeStyle = '#00e5ff';
+                    canvasCtx.lineWidth = 4;
                     const fingers = [[0,1,2,3,4],[0,5,6,7,8],[0,9,10,11,12],[0,13,14,15,16],[0,17,18,19,20]];
-                    ctx.beginPath();
+                    canvasCtx.beginPath();
                     for (let finger of fingers) {
                         for (let i = 0; i < finger.length-1; i++) {
                             const a = landmarks[finger[i]];
                             const b = landmarks[finger[i+1]];
-                            ctx.moveTo(a.x * canvas.width, a.y * canvas.height);
-                            ctx.lineTo(b.x * canvas.width, b.y * canvas.height);
+                            canvasCtx.moveTo(a.x * canvasElement.width, a.y * canvasElement.height);
+                            canvasCtx.lineTo(b.x * canvasElement.width, b.y * canvasElement.height);
                         }
                     }
-                    ctx.stroke();
+                    canvasCtx.stroke();
 
-                    // Joints
-                    ctx.fillStyle = '#ffea00';
+                    // Titik sendi
+                    canvasCtx.fillStyle = '#ffea00';
                     landmarks.forEach(p => {
-                        ctx.beginPath();
-                        ctx.arc(p.x*canvas.width, p.y*canvas.height, 5, 0, Math.PI*2);
-                        ctx.fill();
+                        canvasCtx.beginPath();
+                        canvasCtx.arc(p.x * canvasElement.width, p.y * canvasElement.height, 5, 0, 2*Math.PI);
+                        canvasCtx.fill();
                     });
 
                     // Gesture Blur
                     if (landmarks[8].y < landmarks[6].y - 0.05 && landmarks[12].y < landmarks[10].y - 0.05) {
-                        gayaBlur = true;
+                        gayaDuaJari = true;
                     }
 
-                    // Gesture Kicau
-                    if (results.detections && results.detections.length > 0) {
-                        const nose = results.detections[0].landmarks[2];
-                        let close = false;
+                    // Gesture Kicau + Garis Jarak
+                    if (detectedFaces.length > 0) {
+                        const nose = detectedFaces[0].landmarks[2];
+                        let isCloseToNose = false;
 
-                        [4,8,12,16,20].forEach(i => {
-                            const tip = landmarks[i];
+                        const tips = [4,8,12,16,20];
+                        tips.forEach(idx => {
+                            const tip = landmarks[idx];
                             const dist = Math.hypot(tip.x - nose.x, tip.y - nose.y);
-                            if (dist < 0.12) close = true;
+                            if (dist < 0.11) isCloseToNose = true;
 
-                            // Garis jarak
-                            ctx.strokeStyle = dist < 0.12 ? '#39ff14' : '#ff2a2a';
-                            ctx.lineWidth = 3;
-                            ctx.beginPath();
-                            ctx.moveTo(tip.x*canvas.width, tip.y*canvas.height);
-                            ctx.lineTo(nose.x*canvas.width, nose.y*canvas.height);
-                            ctx.stroke();
+                            canvasCtx.strokeStyle = dist < 0.11 ? '#39ff14' : '#ff2a2a';
+                            canvasCtx.lineWidth = 3;
+                            canvasCtx.setLineDash([4,4]);
+                            canvasCtx.beginPath();
+                            canvasCtx.moveTo(tip.x*canvasElement.width, tip.y*canvasElement.height);
+                            canvasCtx.lineTo(nose.x*canvasElement.width, nose.y*canvasElement.height);
+                            canvasCtx.stroke();
                         });
+                        canvasCtx.setLineDash([]);
 
-                        const palmOpen = landmarks[8].y < landmarks[6].y && landmarks[12].y < landmarks[10].y;
-                        if (palmOpen && close) gayaKicau = true;
+                        const palmOpen = landmarks[8].y < landmarks[6].y && 
+                                        landmarks[12].y < landmarks[10].y && 
+                                        landmarks[16].y < landmarks[14].y;
+
+                        if (palmOpen && isCloseToNose) gayaScuba = true;
                     }
                 }
             }
+            canvasCtx.restore();
 
-            ctx.restore();
-
-            // Update status
-            if (gayaKicau) statusText.textContent = "KICAU DETECTED!";
-            else if (gayaBlur) statusText.textContent = "BLUR DETECTED!";
-            else if (isAiReady) statusText.textContent = "AWAITING GESTURE";
+            // Logika mode
+            if (gayaScuba) {
+                if (activeMode !== 'kicau' && !countingMode) mulaiHitungMundur('kicau');
+            } else if (gayaDuaJari) {
+                if (activeMode !== 'blur' && !countingMode) mulaiHitungMundur('blur');
+            }
         }
+
+        function mulaiHitungMundur(targetMode) {
+            countingMode = targetMode;
+            let waktu = 3;
+            angkaCountdown.textContent = waktu;
+            angkaCountdown.classList.remove('hidden');
+            updateStatus(`HOLD... ${waktu}`, "#ffca3a");
+
+            countdownTimer = setInterval(() => {
+                waktu--;
+                if (waktu > 0) {
+                    angkaCountdown.textContent = waktu;
+                    updateStatus(`HOLD... ${waktu}`, "#ffca3a");
+                } else {
+                    clearInterval(countdownTimer);
+                    angkaCountdown.classList.add('hidden');
+                    activeMode = targetMode;
+                    countingMode = null;
+
+                    if (targetMode === 'blur') {
+                        audioBlur.play();
+                        updateStatus("BLUR ACTIVE", "#39ff14", "🎵 Sal Priadi - Foto Kita Blur");
+                    } else {
+                        audioKicau.play();
+                        startGifs();
+                        updateStatus("KICAU MANIA ACTIVE", "#00e5ff", "🎵 Kicau Mania");
+                    }
+                }
+            }, 1000);
+        }
+
+        function startGifs() {
+            gifContainer.classList.remove('hidden');
+            const gifs = document.querySelectorAll('.kicau-gif');
+            gifs.forEach(g => g.classList.remove('show'));
+            let i = 0;
+            gifTimer = setInterval(() => {
+                if (i < gifs.length) gifs[i++].classList.add('show');
+                else clearInterval(gifTimer);
+            }, 400);
+        }
+
+        function resetSystem() {
+            clearInterval(countdownTimer);
+            clearInterval(gifTimer);
+            activeMode = null;
+            countingMode = null;
+            audioBlur.pause(); audioBlur.currentTime = 0;
+            audioKicau.pause(); audioKicau.currentTime = 0;
+            angkaCountdown.classList.add('hidden');
+            gifContainer.classList.add('hidden');
+        }
+
+        audioBlur.addEventListener('ended', resetSystem);
+        audioKicau.addEventListener('ended', resetSystem);
     </script>
 </body>
 </html>
