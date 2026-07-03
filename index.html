@@ -7,7 +7,7 @@
     <style>
         :root {
             --bg-grad-1: #0f2027; --bg-grad-2: #203a43; --bg-grad-3: #2c5364;
-            --neon-blue: #00e5ff; --neon-green: #39ff14; --neon-red: #ff2a2a;
+            --neon-blue: #00e5ff; --neon-green: #39ff14; --neon-red: #ff2a2a; --neon-yellow: #ffea00;
             --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1);
         }
 
@@ -124,8 +124,8 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-red);">AWAITING GESTURE</span></div>
-                <div class="song-title" id="song-indicator">🎵 Siap Menerima Gaya...</div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-yellow);">LOADING AI MODELS...</span></div>
+                <div class="song-title" id="song-indicator">🎵 Mohon tunggu sebentar...</div>
             </div>
         </div>
     </div>
@@ -160,6 +160,7 @@
         let butuhResetTangan = false; 
         
         let detectedFaces = []; 
+        let isAiReady = false; // Penanda apakah AI sudah selesai loading
 
         function handleAudioEnded() {
             resetSystem();
@@ -176,6 +177,7 @@
         }
 
         async function mulaiAplikasi() {
+            // Pancing audio
             audioBlur.play().then(() => audioBlur.pause()).catch(()=>{});
             audioKicau.play().then(() => audioKicau.pause()).catch(()=>{});
 
@@ -187,24 +189,34 @@
                 videoElement.srcObject = stream;
             } catch (err) { alert("Kamera perlu diizinkan untuk lanjut!"); return; }
 
+            // SETUP AI WAJAH (Sudah diperbaiki)
             const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
-            faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.4 });
-            faceDetection.onResults((results) => { detectedFaces = results.detections; });
+            faceDetection.setOptions({ 
+                modelSelection: 0, // 0 = Jarak Dekat/Kamera Depan (sebelumnya salah ketik)
+                minDetectionConfidence: 0.4 
+            });
+            faceDetection.onResults((results) => { 
+                detectedFaces = results.detections || []; 
+            });
 
+            // SETUP AI TANGAN
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 8, modelComplexity: 0, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4 });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
-                if(videoElement.videoWidth > 0) {
+                if(videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
                     if(canvasElement.width !== videoElement.videoWidth) {
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
                     }
-                    await Promise.all([
-                        faceDetection.send({image: videoElement}),
-                        hands.send({image: videoElement})
-                    ]);
+                    try {
+                        // DIPERBAIKI: Dijalankan bergantian (antre) agar tidak crash
+                        await faceDetection.send({image: videoElement});
+                        await hands.send({image: videoElement});
+                    } catch(err) {
+                        console.error("AI Loading Error:", err);
+                    }
                 }
                 requestAnimationFrame(prosesFrame); 
             }
@@ -212,6 +224,12 @@
         }
 
         function onResults(results) {
+            // Hilangkan tulisan "LOADING AI MODELS..." jika sudah berhasil membaca frame pertama
+            if (!isAiReady) {
+                isAiReady = true;
+                updateStatus("AWAITING GESTURE", "var(--neon-red)", "🎵 Menunggu gaya...");
+            }
+
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
@@ -255,6 +273,9 @@
                     // 3. LOGIKA SCUBA (👃) & VISUALISASI AI
                     if (detectedFaces && detectedFaces.length > 0) {
                         for (const face of detectedFaces) {
+                            // Validasi agar tidak error jika wajah tidak terdeteksi utuh
+                            if(!face.landmarks || face.landmarks.length < 3) continue;
+
                             const nose = face.landmarks[2]; // Titik ujung hidung
                             
                             // A. Gambar Titik Hidung (Kuning)
@@ -263,10 +284,10 @@
                             canvasCtx.fillStyle = '#ffea00';
                             canvasCtx.fill();
                             canvasCtx.lineWidth = 2;
-                            canvasCtx.strokeStyle = '#000'; // Border hitam biar menonjol
+                            canvasCtx.strokeStyle = '#000'; 
                             canvasCtx.stroke();
                             
-                            // Hitung Jarak
+                            // Hitung Jarak Jari ke Hidung
                             const distTelunjuk = Math.sqrt((hand[8].x - nose.x)**2 + (hand[8].y - nose.y)**2);
                             const distJempol = Math.sqrt((hand[4].x - nose.x)**2 + (hand[4].y - nose.y)**2);
                             
@@ -283,9 +304,9 @@
                                 canvasCtx.strokeStyle = '#ff2a2a'; // MERAH = Masih Jauh
                             }
                             
-                            canvasCtx.setLineDash([5, 5]); // Efek garis putus-putus
+                            canvasCtx.setLineDash([5, 5]); 
                             canvasCtx.stroke();
-                            canvasCtx.setLineDash([]); // Reset kembali
+                            canvasCtx.setLineDash([]); 
                         }
                     }
                 }
@@ -330,7 +351,7 @@
 
             if (activeMode === 'blur' && !gayaDuaJari) updateStatus("BLUR PAUSED (Music Playing)", "#ffca3a");
             if (activeMode === 'kicau' && !gayaScuba) updateStatus("SCUBA PAUSED (Music Playing)", "#ffca3a");
-            if (!activeMode && !countingMode && !butuhResetTangan) updateStatus("AWAITING GESTURE", "var(--neon-red)", "🎵 Menunggu gaya...");
+            if (!activeMode && !countingMode && !butuhResetTangan && isAiReady) updateStatus("AWAITING GESTURE", "var(--neon-red)", "🎵 Menunggu gaya...");
         }
 
         function resetSystem() {
