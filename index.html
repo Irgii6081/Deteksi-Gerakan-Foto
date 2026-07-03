@@ -120,6 +120,7 @@
         });
 
         async function mulaiAplikasi() {
+            // Memancing audio agar diizinkan play oleh browser
             audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
 
             document.getElementById('landing-page').classList.add('hidden');
@@ -128,10 +129,21 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 videoElement.srcObject = stream;
-            } catch (err) { alert("Izinkan kamera!"); return; }
+            } catch (err) { 
+                alert("Izinkan kamera untuk menggunakan fitur ini!"); 
+                return; 
+            }
 
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({ maxNumHands: 4, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+            
+            // Konfigurasi baru: maxNumHands diubah menjadi 8 agar bisa deteksi rame-rame
+            // Confidence diturunkan sedikit agar lebih fleksibel mendeteksi tangan
+            hands.setOptions({ 
+                maxNumHands: 8, 
+                modelComplexity: 0, 
+                minDetectionConfidence: 0.4, 
+                minTrackingConfidence: 0.4 
+            });
             hands.onResults(onResults);
 
             async function prosesFrame() { 
@@ -147,8 +159,6 @@
             videoElement.addEventListener('loadeddata', prosesFrame);
         }
 
-        const getJarak = (p1, p2) => (p1.x - p2.x)**2 + (p1.y - p2.y)**2;
-
         function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -157,6 +167,7 @@
 
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
+                    // Gambar kerangka tangan (opsional, bisa dihapus jika tidak mau ada garis di layar)
                     canvasCtx.strokeStyle = '#00FF00';
                     canvasCtx.lineWidth = 4;
                     canvasCtx.beginPath();
@@ -170,24 +181,21 @@
                     }
                     canvasCtx.stroke();
 
-                    const t8 = landmarks[8], t6 = landmarks[6];
-                    const t12 = landmarks[12], t10 = landmarks[10];
-                    const t4 = landmarks[4];   // Jempol
-                    const t16 = landmarks[16];
-                    const t20 = landmarks[20];
+                    // Logika jarak dinamis. Membandingkan ujung jari dengan ruas tengahnya sendiri.
+                    // (y lebih kecil berarti posisi lebih di atas pada layar)
+                    const telunjukNaik = landmarks[8].y < landmarks[6].y;
+                    const tengahNaik   = landmarks[12].y < landmarks[10].y;
+                    
+                    const manisTurun = landmarks[16].y > landmarks[14].y;
+                    const kelingkingTurun = landmarks[20].y > landmarks[18].y;
 
-                    const telunjukNaik = t8.y < t6.y - 0.13;
-                    const tengahNaik   = t12.y < t10.y - 0.13;
+                    // Jempol harus ditekuk atau minimal tidak mengacung (thumbs up) ke atas
+                    const jempolTurun = landmarks[4].y > landmarks[5].y - 0.03; 
 
-                    // Jempol harus benar-benar turun
-                    const jempolTurun = getJarak(t4, landmarks[0]) < getJarak(t4, landmarks[5]) * 1.1;
-
-                    const manisTurun = t16.y > t10.y - 0.07;
-                    const kelingkingTurun = t20.y > t10.y - 0.07;
-
-                    if (telunjukNaik && tengahNaik && jempolTurun && manisTurun && kelingkingTurun) {
+                    // Jika telunjuk & tengah naik, dan jari lainnya turun
+                    if (telunjukNaik && tengahNaik && manisTurun && kelingkingTurun && jempolTurun) {
                         gayaDuaJari = true;
-                        break;
+                        break; // Cukup 1 orang yang bergaya, langsung trigger untuk semuanya
                     }
                 }
             }
