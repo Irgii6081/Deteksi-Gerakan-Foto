@@ -93,10 +93,10 @@
             <p>
                 ✌️ <strong>Telunjuk + Tengah</strong> = Mode Foto Blur<br>
                 👃 <strong>Sentuh Hidung</strong> = Mode Kicau Mania<br><br>
-                <em>Sistem cepat: Tangan dan Hidung terdeteksi instan!</em>
+                <em>Versi Stabil untuk Mobile!</em>
             </p>
             <button onclick="mulaiAplikasi()">START CAMERA</button>
-            <div class="info-text">SECURE SYSTEM • FAST TRACKING</div>
+            <div class="info-text">STABLE SYSTEM • NO CRASH</div>
         </div>
     </div>
 
@@ -108,7 +108,7 @@
             </div>
             
             <div class="video-wrapper">
-                <video id="webcam" autoplay playsinline></video>
+                <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="output_canvas"></canvas>
                 
                 <div id="gif-container" class="hidden">
@@ -124,8 +124,8 @@
             </div>
 
             <div class="camera-status">
-                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-yellow);">MENYIAPKAN AI... CEPAT!</span></div>
-                <div class="song-title" id="song-indicator">🎵 Tunggu detak jantung mesin...</div>
+                <div class="status-box">STATUS: <span id="status-text" style="color: var(--neon-yellow);">MENYIAPKAN AI... MOHON TUNGGU</span></div>
+                <div class="song-title" id="song-indicator">🎵 Mengunduh model kecerdasan buatan...</div>
             </div>
         </div>
     </div>
@@ -161,9 +161,6 @@
         
         let detectedFaces = []; 
         let isAiReady = false; 
-        
-        // KUNCI PENGAMAN BIAR GAK NGE-HANG
-        let isProcessingFrame = false; 
 
         function handleAudioEnded() {
             resetSystem();
@@ -186,49 +183,46 @@
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('camera-page').classList.remove('hidden');
 
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } });
-                videoElement.srcObject = stream;
-            } catch (err) { alert("Izinkan kamera dulu ya!"); return; }
-
-            // SETUP AI (Fast Mode)
+            // 1. SETUP AI WAJAH
             const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
             faceDetection.setOptions({ modelSelection: 0, minDetectionConfidence: 0.4 });
             faceDetection.onResults((results) => { detectedFaces = results.detections || []; });
 
+            // 2. SETUP AI TANGAN
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 4, modelComplexity: 0, minDetectionConfidence: 0.4, minTrackingConfidence: 0.4 });
             hands.onResults(onResults);
 
-            async function prosesFrame() { 
-                // CEGAH TABRAKAN PROSES (Ini yang bikin cepat & gak crash)
-                if (isProcessingFrame) {
-                    requestAnimationFrame(prosesFrame);
-                    return;
-                }
+            // 3. MESIN KAMERA RESMI DARI MEDIAPIPE (Anti Hang)
+            const camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    if (videoElement.videoWidth === 0) return; // Cegah error kalau video belum kebuka
 
-                if(videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
                     if(canvasElement.width !== videoElement.videoWidth) {
                         canvasElement.width = videoElement.videoWidth;
                         canvasElement.height = videoElement.videoHeight;
                     }
                     
-                    isProcessingFrame = true; // Kunci aktif
                     try {
-                        await Promise.all([
-                            faceDetection.send({image: videoElement}),
-                            hands.send({image: videoElement})
-                        ]);
+                        // Kuncinya di sini: Jalaninnya berurutan, bukan berbarengan!
+                        await faceDetection.send({image: videoElement});
+                        await hands.send({image: videoElement});
                     } catch(err) {
-                        console.error("AI Error:", err);
+                        console.error("Proses AI Terhenti Sementara: ", err);
                     }
-                    isProcessingFrame = false; // Kunci lepas
-                }
-                requestAnimationFrame(prosesFrame); 
-            }
-            videoElement.addEventListener('loadeddata', prosesFrame);
+                },
+                width: 640,
+                height: 480,
+                facingMode: "user"
+            });
+
+            // Mulai kamera
+            camera.start().catch((err) => {
+                alert("Gagal mengakses kamera! Pastikan izin kamera sudah diberikan. Error: " + err);
+            });
         }
 
+        // FUNGSI UTAMA (Hanya dipanggil kalau Tangan berhasil dianalisis)
         function onResults(results) {
             if (!isAiReady) {
                 isAiReady = true;
@@ -244,7 +238,7 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const hand of results.multiHandLandmarks) {
                     
-                    // GAMBAR TANGAN BIRU
+                    // GAMBAR KERANGKA TANGAN
                     canvasCtx.strokeStyle = '#00e5ff';
                     canvasCtx.fillStyle = '#00e5ff';
                     canvasCtx.lineWidth = 2.5;
@@ -264,7 +258,7 @@
                         canvasCtx.fill();
                     }
 
-                    // CEK BLUR
+                    // LOGIKA BLUR
                     const telunjukNaik = hand[8].y < hand[6].y;
                     const tengahNaik   = hand[12].y < hand[10].y;
                     const manisTurun = hand[16].y > hand[14].y;
@@ -275,13 +269,14 @@
                         gayaDuaJari = true;
                     }
 
-                    // CEK HIDUNG
+                    // LOGIKA SCUBA (Pegang Hidung)
                     if (detectedFaces && detectedFaces.length > 0) {
                         for (const face of detectedFaces) {
                             if(!face.landmarks || face.landmarks.length < 3) continue;
 
                             const nose = face.landmarks[2];
                             
+                            // Visualisasi Hidung
                             canvasCtx.beginPath();
                             canvasCtx.arc(nose.x * canvasElement.width, nose.y * canvasElement.height, 6, 0, 2 * Math.PI);
                             canvasCtx.fillStyle = '#ffea00';
@@ -293,6 +288,7 @@
                             const distTelunjuk = Math.sqrt((hand[8].x - nose.x)**2 + (hand[8].y - nose.y)**2);
                             const distJempol = Math.sqrt((hand[4].x - nose.x)**2 + (hand[4].y - nose.y)**2);
                             
+                            // Visualisasi Garis Sensor
                             canvasCtx.beginPath();
                             canvasCtx.moveTo(hand[8].x * canvasElement.width, hand[8].y * canvasElement.height);
                             canvasCtx.lineTo(nose.x * canvasElement.width, nose.y * canvasElement.height);
@@ -313,6 +309,7 @@
             }
             canvasCtx.restore();
 
+            // PENGATURAN MODE (Tidak Berubah)
             if (butuhResetTangan) {
                 if (!gayaDuaJari && !gayaScuba) {
                     butuhResetTangan = false;
@@ -333,6 +330,7 @@
                 if (countingMode) resetSystem();
             }
 
+            // APLIKASI EFEK VISUAL
             if (countingMode === 'blur' || (activeMode === 'blur' && gayaDuaJari)) {
                 videoElement.classList.add('blur-aktif');
                 if (activeMode === 'blur') updateStatus("BLUR ACTIVE", "var(--neon-green)", "🎵 Sal Priadi - Foto Kita Blur");
