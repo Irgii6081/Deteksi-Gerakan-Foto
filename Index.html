@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔥 Rezyyxy Downloader - TikTok & Instagram</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #eee;
+      padding: 15px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .box, .info-box {
+      width: 100%;
+      max-width: 600px;
+      background: #16213e;
+      border-radius: 24px;
+      padding: 25px;
+      box-shadow: 0 15px 35px rgba(0, 255, 100, .1);
+      box-sizing: border-box;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .info-box {
+      text-align: left;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, .3);
+    }
+
+    @media (min-width: 768px) {
+      .box, .info-box {
+        max-width: 800px;
+        padding: 40px;
+      }
+    }
+
+    h1 {
+      color: #00ff88;
+      font-size: 24px;
+      margin: 0 0 5px;
+      text-align: center;
+    }
+
+    .sub-title {
+      color: #00ff88;
+      margin: 0 0 12px;
+      font-size: 13px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      background: #0f1c2e;
+      border: 2px solid #00ff88;
+      border-radius: 12px;
+      color: #fff;
+      box-sizing: border-box;
+      outline: 0;
+      font-size: 14px;
+    }
+
+    .flex {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .btn {
+      padding: 12px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+      width: 100%;
+      margin: 5px 0;
+      transition: .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-sizing: border-box;
+    }
+
+    .btn:active {
+      transform: scale(.95);
+    }
+
+    .btn:disabled {
+      background: #555 !important;
+      color: #aaa !important;
+      cursor: wait;
+    }
+
+    .b-pst { background: #00bfff; flex: 1; color: #000; }
+    .b-clr { background: #333; color: #fff; flex: 1; }
+    .b-main { background: #00ff88; color: #000; }
+    .b-mus { background: #ff3366; color: #fff; }
+
+    .header-top {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pwa-btn {
+      background: #0f1c2e;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      padding: 0 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      height: 34px;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      transition: .2s;
+      box-sizing: border-box;
+    }
+
+    .wifi-box {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 10px;
+      background: #0f1c2e;
+      border: 1px solid #00ff88;
+      border-radius: 8px;
+      height: 34px;
+      box-sizing: border-box;
+    }
+
+    .wifi-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 12px;
+    }
+
+    .bar {
+      width: 3px;
+      background: #555;
+      border-radius: 1px;
+    }
+    .b1 { height: 4px; }
+    .b2 { height: 8px; }
+    .b3 { height: 12px; }
+    .active { background: #00ff88; }
+
+    .theme-btn {
+      background: #0f1c2e;
+      color: #fff;
+      border: 1px solid #00ff88;
+      padding: 0 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: .2s;
+      box-sizing: border-box;
+    }
+
+    .badge-platform {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .bg-tiktok { background: #ff0050; color: #fff; }
+    .bg-instagram { background: #e1306c; color: #fff; }
+
+    .res {
+      margin-top: 20px;
+      padding: 15px;
+      background: #0f1c2e;
+      border-radius: 18px;
+      display: none;
+      border: 1px solid #00ff88;
+      animation: fadeInUp 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    video {
+      width: 100%;
+      height: 250px;
+      border-radius: 12px;
+      margin: 10px 0;
+      background: #000;
+      border: none;
+    }
+
+    #tBox {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 9999;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tst {
+      background: #1f4068;
+      color: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: left;
+      border-left: 5px solid #00ff88;
+      font-size: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .4);
+    }
+    .err { border-color: #ff3366; }
+
+    .f-lst {
+      text-align: left;
+      background: #16213e;
+      padding: 15px;
+      border-radius: 14px;
+      max-height: 500px;
+      overflow-y: auto;
+      margin: 15px 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    .f-row {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      background: #0f1c2e;
+      border-radius: 12px;
+      border: 1px solid #252525;
+    }
+
+    .f-img {
+      width: 100%;
+      height: 220px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #000;
+      border: 1px solid #00ff88;
+    }
+
+    .info-box h2 { color: #00ff88; font-size: 18px; margin-top: 20px; }
+    .info-box p, .info-box li { font-size: 14px; color: #ccc; line-height: 1.6; }
+
+    .hst {
+      margin-top: 15px;
+      text-align: left;
+      background: #0f1c2e;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .hst-title {
+      color: #00ff88;
+      font-weight: bold;
+    }
+
+    .h-it {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #222;
+      gap: 10px;
+      transition: .2s;
+    }
+    .h-it:hover { background: #16213e; border-radius: 8px; }
+
+    .h-img {
+      width: 45px;
+      height: 45px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #000;
+    }
+    .h-txt { flex: 1; cursor: pointer; }
+    .h-del {
+      background: #ff3366;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 25px;
+      height: 25px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #netStatus {
+      width: 100%;
+      max-width: 600px;
+      padding: 6px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+      margin-top: 10px;
+    }
+
+    .no-save {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      outline: none;
+      -webkit-user-drag: none;
+    }
+
+    body.light-mode {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    body.light-mode .box,
+    body.light-mode .info-box,
+    body.light-mode .f-lst {
+      background: #ffffff;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    body.light-mode h1 { color: #0284c7 !important; }
+    body.light-mode .sub-title { color: #0f766e !important; }
+
+    body.light-mode .wifi-box,
+    body.light-mode .theme-btn,
+    body.light-mode .pwa-btn {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0284c7;
+    }
+
+    body.light-mode input {
+      background: #ffffff;
+      border-color: #0284c7;
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    body.light-mode input::placeholder { color: #64748b; }
+
+    body.light-mode .res,
+    body.light-mode .hst,
+    body.light-mode .f-row {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    body.light-mode .hst-title { color: #0284c7 !important; }
+    body.light-mode .h-it { border-bottom-color: #e2e8f0; }
+    body.light-mode .h-it:hover { background: #e2e8f0; }
+
+    body.light-mode .b-main { background: #059669 !important; color: #ffffff !important; }
+    body.light-mode .b-pst { background: #0284c7 !important; color: #ffffff !important; }
+    body.light-mode .b-clr { background: #e2e8f0 !important; color: #334155 !important; border: 1px solid #cbd5e1; }
+    body.light-mode .b-mus { background: #e11d48 !important; color: #ffffff !important; }
+    body.light-mode .info-box h2, body.light-mode .u-name { color: #0284c7 !important; }
+    body.light-mode .info-box p, body.light-mode .info-box li, body.light-mode .u-txt { color: #334155 !important; }
+
+    body.light-mode .tst {
+      background: #ffffff;
+      color: #0f172a;
+      border-left: 5px solid #0284c7;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255, 255, 255, .3);
+      border-top: 3px solid #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    body.light-mode .spinner {
+      border: 3px solid rgba(0, 0, 0, .1);
+      border-top: 3px solid #0284c7;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    let abFired = 0;
+    function abW() {
+      if (abFired) return 1;
+      abFired = 1;
+      let s = () => {
+        if (document.getElementById('abW_ui')) return;
+        let o = document.createElement('div');
+        o.id = 'abW_ui';
+        o.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,10,10,0.98);z-index:999999;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;text-align:center;padding:20px;box-sizing:border-box;';
+        o.innerHTML = "<h2 style='color:#ff3366;margin-bottom:10px;'>⚠️ Adblock Terdeteksi!</h2><p style='color:#ccc;line-height:1.6;max-width:400px;font-size:14px;'>Website ini beroperasi secara gratis berkat dukungan iklan.<br><br><b>Mohon matikan Adblocker Anda</b> lalu muat ulang (refresh) halaman ini untuk melanjutkan.</p><button onclick='location.reload()' style='margin-top:20px;padding:12px 24px;background:#00ff88;color:#000;border:none;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;box-shadow:0 5px 15px rgba(0,255,136,0.3);'>🔄 Saya Sudah Mematikan Adblock</button>";
+        document.body.appendChild(o);
+        document.body.style.overflow = 'hidden';
+      };
+      if (document.body) s();
+      else window.addEventListener('DOMContentLoaded', s);
+      return 1;
+    }
+  </script>
+</head>
+<body>
+
+  <div id="tBox"></div>
+  <div id="netStatus"></div>
+
+  <div class="box">
+    <div class="header-top">
+      <div class="header-controls">
+        <button id="pwaBtn" class="pwa-btn" onclick="installPWA()">📲 Install App</button>
+        <div class="wifi-box" id="wifi">
+          <div class="wifi-bars">
+            <div class="bar b1"></div>
+            <div class="bar b2"></div>
+            <div class="bar b3"></div>
+          </div>
+          <span id="ms" style="font-size:10px;font-weight:700;">--ms</span>
+        </div>
+        <button id="themeToggle" class="theme-btn" onclick="toggleTheme()">☀️</button>
+      </div>
+    </div>
+
+    <h1>🔥 Rezyyxy Downloader</h1>
+    <p class="sub-title">TikTok • Instagram</p>
+    
+    <input type="text" id="url" placeholder="Tempel tautan TikTok atau Instagram di sini...">
+    
+    <div class="flex">
+      <button class="btn b-pst" onclick="pst()">📋 Tempel</button>
+      <button class="btn b-clr" onclick="clr()">❌ Bersihkan</button>
+    </div>
+    
+    <button id="btnCek" class="btn b-main" onclick="cek()">🔍 CEK MEDIA & MUSIK</button>
+    
+    <div id="res" class="res"></div>
+    
+    <div id="ad-wrapper-mid" style="width:100%;max-width:600px;margin:20px auto;text-align:center;">
+      <script async="async" data-cfasync="false" src="https://ambitionbookingslick.com/ff0cd9d911977b5f918c3f3c787aee9e/invoke.js"></script>
+      <div id="container-ff0cd9d911977b5f918c3f3c787aee9e"></div>
+    </div>
+    
+    <div id="hst"></div>
+  </div>
+
+  <div class="info-box">
+    <h2>⚡ Fitur Utama</h2>
+    <ul>
+      <li><b>TikTok & Instagram Downloader:</b> Unduh Video, Reels, Foto Slideshow/Carousel tanpa watermark.</li>
+      <li><b>Unduh Foto Langsung:</b> Foto diunduh secara otomatis tanpa perlu membuka halaman baru.</li>
+      <li><b>Dukungan Slideshow (ZIP):</b> Unduh banyak foto sekaligus dalam bentuk satu file ZIP.</li>
+      <li><b>Ekstrak Audio:</b> Ambil audio MP3 berkualitas tinggi dari konten TikTok & Instagram.</li>
+    </ul>
+
+    <h2>🛠️ Panduan Penggunaan</h2>
+    <p>
+      1. <b>Salin Tautan:</b> Buka aplikasi TikTok atau Instagram, klik 'Bagikan' lalu 'Salin Tautan'.<br>
+      2. <b>Tempel Tautan:</b> Buka web ini, tautan akan terdeteksi secara otomatis.<br>
+      3. <b>Unduh:</b> Klik tombol unduh media yang tersedia di bawah pratinjau media.
+    </p>
+
+    <p style="text-align:center;font-size:12px;color:#888;margin-top:25px;font-weight:700;letter-spacing:.5px">©2026 Rezyyxy Downloader. Seluruh Hak Cipta Dilindungi.</p>
+  </div>
+
+  <script>
+    const RAPIDAPI_KEY = "1a9b74a711msh891a28c3d76e0f8p1750b5jsnce1077f792eb";
+    const RAPIDAPI_HOST_ALL = "social-download-all-in-one.p.rapidapi.com";
+
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if ($('pwaBtn'))$('pwaBtn').style.display = 'flex';
+    });
+
+    const installPWA = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted' && $('pwaBtn'))$('pwaBtn').style.display = 'none';
+      deferredPrompt = null;
+    };
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    let vU = '', vH = '', mU = '', ttl = '', img = [], cv = '', currentPlatform = '';
+
+    const $ = id => document.getElementById(id);
+    const esc = s => s ? s.replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c])) : '';
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    const getProxyImg = (url) => {
+      if (!url) return '';
+      if (url.includes('cdninstagram.com') || url.includes('fbcdn.net')) {
+        return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
+      }
+      return url;
+    };
+
+    const cleanUniversalUrl = (text) => {
+      if (!text) return { url: '', platform: null };
+      let rawMatch = text.match(/(https?:\/\/[^\s]+)/i);
+      if (!rawMatch) return { url: '', platform: null };
+      
+      let fullUrl = rawMatch[1];
+      let platform = null;
+
+      if (/tiktok\.com/i.test(fullUrl)) {
+        platform = 'tiktok';
+      } else if (/instagram\.com/i.test(fullUrl)) {
+        platform = 'instagram';
+        fullUrl = fullUrl.split('?')[0];
+        if (!fullUrl.endsWith('/')) fullUrl += '/';
+      }
+
+      return { url: fullUrl, platform };
+    };
+
+    const fetchWithTimeout = async (url, options = {}, timeoutMs = 5000) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return response;
+      } catch (err) {
+        clearTimeout(id);
+        throw err;
+      }
+    };
+
+    let isPingChecking = false;
+    let uSig = async () => {
+      let s = $('wifi').querySelectorAll('.bar'), on = navigator.onLine;
+      if (!on) {
+        $('ms').innerText = '--ms';
+        for (let i = 0; i < 3; i++) {
+          s[i].classList.remove('active');
+          s[i].style.background = '#555';
+        }
+        return;
+      }
+
+      if (isPingChecking) return;
+      isPingChecking = true;
+
+      let start = performance.now();
+      try {
+        await fetch('https://tikwm.com/favicon.ico', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+        let ms = Math.round(performance.now() - start);
+        $('ms').innerText = ms + 'ms';
+
+        let color = ms < 150 ? '#00ff88' : (ms < 350 ? '#ffcc00' : '#ff3366');
+
+        for (let i = 0; i < 3; i++) {
+          s[i].classList.add('active');
+          s[i].style.background = color;
+        }
+      } catch (e) {
+        $('ms').innerText = 'err';
+        for (let i = 0; i < 3; i++) {
+          s[i].classList.remove('active');
+          s[i].style.background = '#ff3366';
+        }
+      } finally {
+        isPingChecking = false;
+      }
+    };
+
+    window.addEventListener('online', uSig);
+    window.addEventListener('offline', uSig);
+    setInterval(uSig, 2000);
+
+    let tst = (m, e = 0) => {
+      let tBox = $('tBox');
+      if (tBox) tBox.innerHTML = '';
+      
+      let t = document.createElement('div');
+      t.className = `tst ${e ? 'err' : ''}`;
+      t.innerHTML = m;
+      tBox.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    };
+
+    let pst = async () => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      try {
+        let raw = await navigator.clipboard.readText();
+        let { url: clean, platform } = cleanUniversalUrl(raw);
+        if (platform) {
+          $('url').value = clean;
+          cek();
+        } else {
+          tst("Link tidak dikenali! Tempel link TikTok atau Instagram.", 1);
+        }
+      } catch {
+        tst("Gagal akses clipboard", 1);
+      }
+    };
+
+    let clr = () => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      vU = vH = mU = ttl = '';
+      img = [];
+      cv = '';
+      currentPlatform = '';
+      $('url').value = '';
+      $('res').style.display = 'none';$('res').innerHTML = '';
+      tst("Dibersihkan");
+    };
+
+    let cek = async () => {
+      if (navigator.vibrate) navigator.vibrate(50);
+      
+      let rawU = $('url').value.trim();
+      let { url: u, platform } = cleanUniversalUrl(rawU);
+
+      if (!platform) {
+        $('url').value = '';
+        return tst("Link tidak valid! Gunakan link TikTok atau Instagram.", 1);
+      }
+      
+      $('url').value = u;
+      currentPlatform = platform;
+
+      if (!navigator.onLine) {
+        return tst("Mode Offline! Sambungkan ke internet.", 1);
+      }
+
+      let bC = $('btnCek');
+      if (bC.disabled) return;
+      bC.disabled = 1;
+      bC.innerHTML = "<span class='spinner'></span> Memproses...";
+      $('res').style.display = 'block';$('res').innerHTML = `<span class="spinner" style="border-top-color:#0284c7"></span> Memproses media ${platform.toUpperCase()}... 🔥`;
+
+      let startTime = Date.now();
+
+      try {
+        vU = vH = mU = ttl = cv = '';
+        img = [];
+        let usr = platform;
+        let fetched = false;
+
+        // 1. TIKTOK VIA TIKWM
+        if (platform === 'tiktok') {
+          try {
+            let r = await fetchWithTimeout(`https://tikwm.com/api/?url=${encodeURIComponent(u)}`, {}, 5000);
+            let d = await r.json();
+            if (d && d.data) {
+              mU = d.data.music || '';
+              ttl = esc(d.data.title || 'TikTok Media');
+              cv = getProxyImg(d.data.cover || '');
+              usr = esc(d.data.author?.unique_id || "kreator");
+
+              if (Array.isArray(d.data.images) && d.data.images.length > 0) {
+                img = d.data.images.map(x => getProxyImg(x));
+              } else {
+                vU = d.data.play || '';
+                vH = d.data.hdplay || '';
+              }
+              fetched = true;
+            }
+          } catch(e) {}
+        }
+
+        // 2. INSTAGRAM (MULTI-SERVER FALLBACK)
+        if (platform === 'instagram') {
+          // Server A: RapidAPI
+          try {
+            let response = await fetchWithTimeout(`https://${RAPIDAPI_HOST_ALL}/v1/social/autolink`, {
+              method: 'POST',
+              headers: {
+                'x-rapidapi-key': RAPIDAPI_KEY,
+                'x-rapidapi-host': RAPIDAPI_HOST_ALL,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ url: u })
+            }, 6000);
+
+            if (response.ok) {
+              let d = await response.json();
+              ttl = esc(d.title || d.tit || 'Instagram Media');
+              cv = getProxyImg(d.picture || d.cover || d.thumbnail || d.th || '');
+              usr = esc(d.author || d.unique_id || 'instagram');
+              mU = d.audio || d.music || d.m || '';
+
+              if (Array.isArray(d.picker) && d.picker.length > 0) {
+                img = d.picker.map(item => typeof item === 'string' ? item : (item.url || item));
+                fetched = true;
+              } else if (Array.isArray(d.images) && d.images.length > 0) {
+                img = d.images.map(item => typeof item === 'string' ? item : (item.url || item));
+                fetched = true;
+              }
+
+              if (!fetched && Array.isArray(d.medias) && d.medias.length > 0) {
+                let imgMedias = d.medias.filter(m => m.type === 'image' || m.extension === 'jpg' || m.extension === 'png');
+                let videoMedias = d.medias.filter(m => m.type === 'video' || m.extension === 'mp4' || m.quality);
+
+                if (imgMedias.length > 0) {
+                  img = imgMedias.map(m => m.url);
+                  fetched = true;
+                } else if (videoMedias.length > 0) {
+                  vU = videoMedias[0].url;
+                  fetched = true;
+                }
+              }
+
+              if (!fetched) {
+                let mainUrl = d.url || d.play || d.sd || d.h || '';
+                if (mainUrl) {
+                  if (mainUrl.includes('.mp4') || d.is_video) {
+                    vU = mainUrl;
+                  } else {
+                    img = [mainUrl];
+                  }
+                  fetched = true;
+                }
+              }
+            }
+          } catch (e) {}
+
+          // Server B: Public API Backup (Jika RapidAPI Limit/Gagal)
+          if (!fetched) {
+            try {
+              let resB = await fetchWithTimeout(`https://api.vkrdown.com/insta/?url=${encodeURIComponent(u)}`, {}, 6000);
+              let dB = await resB.json();
+              if (dB && dB.data) {
+                ttl = esc(dB.data.caption || 'Instagram Media');
+                usr = 'instagram';
+                if (dB.data.urls && dB.data.urls.length > 0) {
+                  let first = dB.data.urls[0];
+                  if (first.type === 'video' || first.url.includes('.mp4')) {
+                    vU = first.url;
+                  } else {
+                    img = dB.data.urls.map(x => x.url);
+                  }
+                  fetched = true;
+                }
+              }
+            } catch (e) {}
+          }
+        }
+
+        if (!fetched) throw new Error("Gagal mengambil media. Pastikan akun tidak diprivat atau coba link lain.");
+
+        let elapsed = Date.now() - startTime;
+        if (elapsed < 1000) await sleep(1000 - elapsed);
+
+        let badgeClass = `bg-${platform}`;
+        let h = `<div style="text-align:left;"><span class="badge-platform ${badgeClass}">${platform}</span></div>`;
+        h += `<div class="u-box" style="text-align:left;padding:10px;border-radius:8px">👤 <b class="u-name" style="color:#00bfff">@${usr}</b><br><small class="u-txt">${ttl}</small></div>`;
+
+        if (img.length > 0) {
+          h += `<div class="f-lst">`;
+          img.forEach((x, i) => {
+            let displayImg = getProxyImg(x);
+            h += `<div class="f-row">
+              <img src="${displayImg}" referrerpolicy="no-referrer" class="f-img no-save" oncontextmenu="return false;" ondragstart="return false;">
+              <div style="display:flex;flex-direction:column;justify-content:space-between;align-items:center;margin-top:12px;width:100%;gap:5px">
+                <span style="font-size:14px;font-weight:700">Foto ${i + 1}</span>
+                <button id="bI_${i}" class="btn b-pst" style="padding:10px 20px;width:100%;margin:0" onclick="dlI(${i})">📸 UNDUH FOTO</button>
+              </div>
+            </div>`;
+          });
+          h += `</div>`;
+          if (img.length > 1) h += `<button id="bIa" class="btn b-main" onclick="dlAZip()">📦 UNDUH SEMUA FOTO (ZIP)</button>`;
+        } else if (vU) {
+          h += `<video controls controlsList="nodownload" referrerpolicy="no-referrer" class="no-save" poster="${cv}"><source src="${vU}" type="video/mp4"></video>`;
+          h += `<button id="bV" class="btn b-main" onclick="dl('v')">⬇️ UNDUH MEDIA</button>`;
+
+          if (!mU) mU = vU;
+        }
+
+        if (mU && !img.length) {
+          h += `<button id="bM" class="btn b-mus" onclick="dl('m')">🎵 UNDUH AUDIO MP3</button>`;
+        }
+
+        $('res').innerHTML = h;
+        sHst(ttl, usr, u, cv);
+        tst("Berhasil ditarik!");
+        $('res').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        let errTxt = "Gagal memproses media. Pastikan akun tidak diprivat atau coba link lain.";
+        tst(errTxt, 1);
+        $('res').innerHTML = `<b style="color:#ff3366">${errTxt}</b>`;
+      }
+      bC.disabled = 0;
+      bC.innerText = "🔍 CEK MEDIA & MUSIK";
+    };
+
+    // FUNGSI UNDUH LANGSUNG DENGAN INDIKATOR PERSEN (0% - 100%)
+    const downloadDirect = (url, fileName, btnId) => {
+      let btn = $(btnId);
+      let origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Mengunduh 0%...`;
+      }
+
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.responseType = 'blob';
+
+      xhr.onprogress = (e) => {
+        if (e.lengthComputable && btn) {
+          let percent = Math.round((e.loaded / e.total) * 100);
+          btn.innerHTML = `<span class="spinner"></span> Mengunduh ${percent}%...`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          if (btn) btn.innerHTML = `<span class="spinner"></span> Menyimpan...`;
+          let blob = xhr.response;
+          let blobUrl = URL.createObjectURL(blob);
+
+          let a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(blobUrl);
+
+          tst("Berhasil diunduh!");
+        } else {
+          window.open(url, '_blank');
+          tst("Mengalihkan ke media...");
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      };
+
+      xhr.onerror = () => {
+        window.open(url, '_blank');
+        tst("Mengalihkan ke media...");
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      };
+
+      xhr.send();
+    };
+
+    // FUNGSI UNDUH FOTO LANGSUNG DENGAN PERSEN
+    const downloadImageDirect = (url, fileName, btnId) => {
+      let btn = $(btnId);
+      let origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Mengunduh 0%...`;
+      }
+
+      let targetUrl = url;
+      if (url.includes('cdninstagram.com') || url.includes('fbcdn.net')) {
+        targetUrl = `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
+      }
+
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', targetUrl, true);
+      xhr.responseType = 'blob';
+
+      xhr.onprogress = (e) => {
+        if (e.lengthComputable && btn) {
+          let percent = Math.round((e.loaded / e.total) * 100);
+          btn.innerHTML = `<span class="spinner"></span> Mengunduh ${percent}%...`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          let blob = xhr.response;
+          let blobUrl = URL.createObjectURL(blob);
+
+          let a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(blobUrl);
+
+          tst("Foto berhasil diunduh!");
+        } else {
+          window.open(url, '_blank');
+          tst("Mengalihkan ke gambar...");
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      };
+
+      xhr.onerror = () => {
+        window.open(url, '_blank');
+        tst("Mengalihkan ke gambar...");
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      };
+
+      xhr.send();
+    };
+
+    // FUNGSI MEMBUKA HALAMAN KEDUA KHUSUS INSTAGRAM VIDEO/AUDIO
+    const triggerDownload = (url, fileName, btnId) => {
+      let btn = $(btnId);
+      let origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Mengalihkan...`;
+      }
+
+      window.open(url, '_blank');
+      tst("Mengalihkan ke halaman media...");
+
+      setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      }, 1500);
+    };
+
+    let dlI = (i) => {
+      let targetUrl = img[i];
+      let fileName = `${ttl}_Foto_${i + 1}.jpg`;
+      downloadImageDirect(targetUrl, fileName, `bI_${i}`);
+    };
+
+    let dl = (t) => {
+      let u = vU, ext = '.mp4', btnId = 'bV';
+      if (t === 'm') { u = mU; ext = '.mp3'; btnId = 'bM'; }
+
+      if (!u) return tst("Tautan tidak ditemukan!", 1);
+      let fileName = `${ttl}${ext}`;
+
+      if (currentPlatform === 'tiktok') {
+        downloadDirect(u, fileName, btnId);
+      } else {
+        triggerDownload(u, fileName, btnId);
+      }
+    };
+
+    let dlAZip = async () => {
+      if (typeof JSZip === 'undefined') return tst("Menyiapkan JSZip...", 1);
+      let b = $('bIa'), o = b.innerHTML;
+      b.innerHTML = "<span class='spinner'></span> Memproses Foto (0%)...";
+      b.disabled = 1;
+
+      try {
+        let z = new JSZip();
+        for (let i = 0; i < img.length; i++) {
+          let percent = Math.round(((i + 1) / img.length) * 100);
+          b.innerHTML = `<span class="spinner"></span> Mengambil Foto ${i + 1}/${img.length} (${percent}%)...`;
+          let res;
+          try {
+            res = await fetch(img[i]);
+          } catch {
+            res = await fetch(`https://corsproxy.io/?${encodeURIComponent(img[i])}`);
+          }
+          let blob = await res.blob();
+          z.file(`Rezyyxy_${i + 1}.jpg`, blob);
+        }
+
+        b.innerHTML = "<span class='spinner'></span> Menyiapkan File ZIP...";
+        await sleep(500);
+
+        let zipBlob = await z.generateAsync({ type: "blob" });
+        let blobUrl = URL.createObjectURL(zipBlob);
+        
+        let a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `Rezyyxy_Slideshow.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(blobUrl);
+        tst("File ZIP Berhasil Diunduh!");
+      } catch (e) {
+        tst("Gagal membuat file ZIP", 1);
+      } finally {
+        b.innerHTML = o;
+        b.disabled = 0;
+      }
+    };
+
+    // FUNGSIONALITAS RIWAYAT (HISTORY)
+    let sHst = (t, u, l, c) => {
+      let h = JSON.parse(localStorage.getItem('h') || '[]');
+      if (!h.some(x => x.l === l)) {
+        h.unshift({ t, u, l, c, fav: 0 });
+        localStorage.setItem('h', JSON.stringify(h));
+        rHst();
+      }
+    };
+
+    let rHst = () => {
+      let h = JSON.parse(localStorage.getItem('h') || '[]');
+      let hstEl = $('hst');
+      if (!hstEl) return;
+      
+      hstEl.innerHTML = h.length ? `
+        <div class="hst">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <b class="hst-title">📜 Riwayat Visual:</b>
+            <button onclick="let h=JSON.parse(localStorage.getItem('h')||'[]').filter(x=>x.fav);localStorage.setItem('h',JSON.stringify(h));rHst();tst('Dihapus!')" style="background:#ff3366;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:10px;cursor:pointer">Clear All</button>
+          </div>
+          ${h.map((x, i) => `
+            <div class="h-it" onclick="if(event.target.tagName!=='BUTTON'&&event.target.tagName!=='IMG')$('url').value='${x.l}',cek()">
+              <img src="${x.c || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='}" referrerpolicy="no-referrer" class="h-img" loading="lazy" onerror="this.src=''">
+              <div class="h-txt">
+                <b style="color:#00bfff">@${x.u}</b><br>
+                <span style="color:#64748b">${x.t.slice(0, 25)}...</span>
+              </div>
+              <button style="background:none;border:0;color:${x.fav ? '#ffcc00' : '#888'};font-size:16px;cursor:pointer" onclick="let h=JSON.parse(localStorage.getItem('h'));h[${i}].fav=!h[${i}].fav;localStorage.setItem('h',JSON.stringify(h));rHst()">★</button>
+              <button class="h-del" onclick="let h=JSON.parse(localStorage.getItem('h'));h.splice(${i},1);localStorage.setItem('h',JSON.stringify(h));rHst();tst('Dihapus')">×</button>
+            </div>
+          `).join('')}
+        </div>` : '';
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      rHst();
+      uSig();
+    });
+
+    let isLight = localStorage.getItem('theme') === 'light';
+    if (isLight) document.body.classList.add('light-mode');
+    if ($('themeToggle'))$('themeToggle').innerText = isLight ? '🌙' : '☀️';
+
+    let toggleTheme = () => {
+      document.body.classList.toggle('light-mode');
+      let isL = document.body.classList.contains('light-mode');
+      localStorage.setItem('theme', isL ? 'light' : 'dark');
+      $('themeToggle').innerText = isL ? '🌙' : '☀️';
+    };
+  </script>
+</body>
+</html>
